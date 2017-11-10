@@ -6,12 +6,9 @@ import pad.service.DataService
 import spark.ModelAndView
 import spark.Request
 import spark.Response
-
-import javax.inject.Inject
-
 import spark.Spark.get
 import spark.Spark.post
-import spark.TemplateViewRoute
+import javax.inject.Inject
 
 class DefaultDataController : AbstractController(), DataController {
     @Inject
@@ -20,16 +17,16 @@ class DefaultDataController : AbstractController(), DataController {
     override fun init() {
         Runner.mainComponent.inject(this)
         val templateEngine = DefaultTemplateEngine()
-        get("/users", TemplateViewRoute { req, res -> this.getData(req, res) }, templateEngine)
-        post("/add", TemplateViewRoute { req, res -> this.createUser(req, res) }, templateEngine)
+        get("/users", { req, res -> this.getData(req, res) }, templateEngine)
+        post("/add", { req, res -> this.createUser(req, res) }, templateEngine)
     }
 
     fun getData(req: Request, res: Response): ModelAndView {
-        return ModelAndView(dataService!!.students, req.headers("Accept"))
+        return ModelAndView(dataService.students, req.headers("Accept"))
     }
 
     fun createUser(req: Request, res: Response): ModelAndView {
-        return ModelAndView(dataService!!.createStudent(req.queryParams("name")), req.headers("Accept"))
+        return ModelAndView(dataService.createStudent(req.queryParams("name")), req.headers("Accept"))
     }
 
 }

@@ -18,7 +18,7 @@ class DataService @Inject constructor() {
     val students: List<Student>
         get() {
             try {
-                return studentDao!!.queryForAll()
+                return studentDao.queryForAll()
             } catch (e: SQLException) {
                 return ArrayList()
             }
@@ -33,7 +33,7 @@ class DataService @Inject constructor() {
         try {
             val student = Student()
             student.name = name
-            studentDao!!.create(student)
+            studentDao.create(student)
             return student
         } catch (e: SQLException) {
             return null
