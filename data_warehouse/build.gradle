@@ -1,0 +1,51 @@
+group 'pad'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.1.51'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    kapt 'com.google.dagger:dagger-compiler:2.5'
+    compile 'com.google.dagger:dagger:2.5'
+    compile 'com.sparkjava:spark-core:2.7.0'
+    compile 'ch.qos.logback:logback-classic:0.9.26'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.2'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-json-org:2.9.2'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.0'
+    compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '4.23'
+    compile group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '4.23'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'
+    compileOnly 'org.glassfish:javax.annotation:10.0-b28'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir "${buildDir}/generated/source/kapt/main"
+        }
+    }
+}
