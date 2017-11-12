@@ -11,4 +11,10 @@ class Student {
 
     @DatabaseField
     var name: String? = null
+
+    @DatabaseField
+    var year: Int? = null
+
+    @DatabaseField
+    var phoneNumber: String? = null
 }

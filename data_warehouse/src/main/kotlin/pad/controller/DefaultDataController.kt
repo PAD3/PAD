@@ -1,13 +1,17 @@
 package pad.controller
 
+import com.baidu.unbiz.fluentvalidator.FluentValidator
+import com.baidu.unbiz.fluentvalidator.ResultCollectors.toSimple
 import pad.Runner
+import pad.model.ErrorMessage
 import pad.serialization.DefaultTemplateEngine
 import pad.service.DataService
+import pad.validator.NameValidator
+import pad.validator.PhoneValidator
 import spark.ModelAndView
 import spark.Request
 import spark.Response
-import spark.Spark.get
-import spark.Spark.post
+import spark.Spark.*
 import javax.inject.Inject
 
 class DefaultDataController : AbstractController(), DataController {
@@ -26,7 +30,18 @@ class DefaultDataController : AbstractController(), DataController {
     }
 
     fun createUser(req: Request, res: Response): ModelAndView {
-        return ModelAndView(dataService.createStudent(req.queryParams("name")), req.headers("Accept"))
+        val result = FluentValidator.checkAll()
+                .on(req.queryParams("name"), NameValidator())
+                .on(req.queryParams("phone"), PhoneValidator())
+                .doValidate()
+                .result(toSimple())
+        var response: Any?
+        if (result.isSuccess) {
+            response = dataService.createStudent(req.queryParams("name"))
+        } else
+            response = ErrorMessage(400, result.errors)
+        res.status(400)
+        return ModelAndView(response, req.headers("Accept"))
     }
 
 }
