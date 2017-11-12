@@ -5,9 +5,12 @@ import com.baidu.unbiz.fluentvalidator.ResultCollectors.toSimple
 import pad.Runner
 import pad.model.ErrorMessage
 import pad.serialization.DefaultTemplateEngine
+import pad.serialization.Format
 import pad.service.DataService
 import pad.validator.NameValidator
 import pad.validator.PhoneValidator
+import pad.validator.YearValidator
+import spark.Filter
 import spark.ModelAndView
 import spark.Request
 import spark.Response
@@ -21,26 +24,39 @@ class DefaultDataController : AbstractController(), DataController {
     override fun init() {
         Runner.mainComponent.inject(this)
         val templateEngine = DefaultTemplateEngine()
-        get("/users", { req, res -> this.getData(req, res) }, templateEngine)
-        post("/add", { req, res -> this.createUser(req, res) }, templateEngine)
+        after(Filter { req, res ->
+            res.header("Content-Type", Format.fromString(req.headers("Accept")).toString())
+        })
+        get("/students", this::getStudents, templateEngine)
+        get("/students/:id", this::getStudent, templateEngine)
+        post("/students", this::addStudent, templateEngine)
     }
 
-    fun getData(req: Request, res: Response): ModelAndView {
-        return ModelAndView(dataService.students, req.headers("Accept"))
+    fun getStudents(req: Request, res: Response): ModelAndView {
+        return ModelAndView(dataService.getStudents(), req.headers("Accept"))
     }
 
-    fun createUser(req: Request, res: Response): ModelAndView {
+    fun getStudent(req: Request, res: Response) : ModelAndView {
+        return ModelAndView(dataService.getStudent(req.params("id")), req.headers("Accept"))
+    }
+
+    fun addStudent(req: Request, res: Response): ModelAndView {
+        val response: Any?
+        val studentName = req.queryParams("name")
+        val studentPhone = req.queryParams("name")
+        val studentYear = req.queryParams("name").toIntOrNull() ?: 0
         val result = FluentValidator.checkAll()
-                .on(req.queryParams("name"), NameValidator())
-                .on(req.queryParams("phone"), PhoneValidator())
+                .setIsFailFast(false)
+                .on(studentName, NameValidator())
+                .on(studentPhone, PhoneValidator())
+                .on(studentYear, YearValidator())
                 .doValidate()
                 .result(toSimple())
-        var response: Any?
-        if (result.isSuccess) {
-            response = dataService.createStudent(req.queryParams("name"))
+        response = if (result.isSuccess) {
+            dataService.createStudent(studentName, studentYear)
         } else
-            response = ErrorMessage(400, result.errors)
-        res.status(400)
+            ErrorMessage(400, result.errors)
+
         return ModelAndView(response, req.headers("Accept"))
     }
 

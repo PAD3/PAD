@@ -24,13 +24,13 @@ dependencies {
     kapt 'com.google.dagger:dagger-compiler:2.5'
     compile 'com.google.dagger:dagger:2.5'
     compile 'com.sparkjava:spark-core:2.7.0'
-    compile 'ch.qos.logback:logback-classic:0.9.26'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.2'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.2'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-json-org:2.9.2'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.2'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.2'
-    compile 'com.baidu.unbiz:fluent-validator-jsr303:1.0.9'
+    compile ('com.baidu.unbiz:fluent-validator-jsr303:1.0.9') {
+    }
     compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '4.23'
     compile group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '4.23'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'
