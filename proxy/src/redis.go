@@ -41,5 +41,5 @@ func (r *Redis) set(req *http.Request, resp *http.Response, ttl int) string {
 }
 
 func getKey(req *http.Request) string {
-	return req.URL.String() + ":" + req.Header.Get("Accept")
+	return req.URL.Path + req.URL.RawQuery + req.Header.Get("Accept")
 }

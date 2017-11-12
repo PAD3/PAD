@@ -13,14 +13,19 @@ type transport struct {
 	http.RoundTripper
 }
 
-func runReverseProxy(r *http.Request, w http.ResponseWriter) {
+var count = 1
+
+func runReverseProxy(servers []string, r *http.Request, w http.ResponseWriter) {
 	director := func(request *http.Request) {
 		log.Printf("EYE-CATCHER ON REQUEST: %s\n", r.URL.String())
 
 		copyHeaders(request.Header, &r.Header)
-		request.Host = "localhost:9090"
 		request.URL.Scheme = "http"
-		request.URL.Host = "localhost:9090"
+		request.URL.Host = "localhost:" + servers[count]
+
+		if count++; count >= len(servers) {
+			count = 1
+		}
 	}
 	proxy := &httputil.ReverseProxy{
 		Director:  director,
