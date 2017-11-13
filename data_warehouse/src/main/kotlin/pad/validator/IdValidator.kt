@@ -3,17 +3,16 @@ package pad.validator
 import com.baidu.unbiz.fluentvalidator.Validator
 import com.baidu.unbiz.fluentvalidator.ValidatorContext
 import com.baidu.unbiz.fluentvalidator.ValidatorHandler
-import java.util.*
 
-class YearValidator constructor(val min : Int, val max : Int): ValidatorHandler<Int>(), Validator<Int> {
+class IdValidator constructor(val fieldName : String): ValidatorHandler<Int>(), Validator<Int> {
 
     override fun validate(context: ValidatorContext?, t: Int?): Boolean {
         if (t == null) {
-            context?.addErrorMsg("No year provided!")
+            context?.addErrorMsg("No $fieldName provided!")
             return false
         }
-        if (t < min || t > max) {
-            context?.addErrorMsg("Invalid year!")
+        if (t < 1 || t >= Int.MAX_VALUE) {
+            context?.addErrorMsg("Invalid $fieldName!")
             return false
         }
         return true

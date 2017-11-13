@@ -1,8 +1,10 @@
 package pad.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.j256.ormlite.field.DatabaseField
+import com.j256.ormlite.field.ForeignCollectionField
 import com.j256.ormlite.table.DatabaseTable
-import pad.StudentDao
+import pad.dao.StudentDao
 
 @DatabaseTable(daoClass = StudentDao::class)
 class Student {
@@ -13,8 +15,12 @@ class Student {
     var name: String? = null
 
     @DatabaseField
-    var year: Int? = null
+    var year: Int = 0
 
     @DatabaseField
-    var phoneNumber: String? = null
+    var phone: String? = null
+
+    @ForeignCollectionField
+    @JsonIgnore
+    var books: Collection<Book> = mutableListOf()
 }

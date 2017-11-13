@@ -1,9 +1,8 @@
-package pad
+package pad.dao
 
 import com.j256.ormlite.dao.BaseDaoImpl
 import com.j256.ormlite.support.ConnectionSource
 import pad.model.Student
-
 import java.sql.SQLException
 
 class StudentDao @Throws(SQLException::class)
