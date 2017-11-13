@@ -24,20 +24,21 @@ func (r *Redis) get(req *http.Request) (value string, err error) {
 func (r *Redis) set(req *http.Request, resp *http.Response, ttl int) string {
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal("Could not read body from request ", err)
-	}
+	handleError(err, "Could not read body from request ")
 	bodyString := string(bodyBytes)
 
 	result, err := redis.String(r.conn.Do("SET", getKey(req), bodyString, "EX", ttl))
 	if result != "OK" {
 		log.Fatal("result not ok: ", result)
 	}
-	if err != nil {
-		log.Fatal("Could not save resp to cache ", err)
-	}
+	handleError(err, "Could not save resp to cache ")
 
 	return bodyString
+}
+func handleError(err error, text string) {
+	if err != nil {
+		log.Fatal(text, err)
+	}
 }
 
 func getKey(req *http.Request) string {

@@ -17,8 +17,6 @@ var count = 1
 
 func runReverseProxy(servers []string, r *http.Request, w http.ResponseWriter) {
 	director := func(request *http.Request) {
-		log.Printf("EYE-CATCHER ON REQUEST: %s\n", r.URL.String())
-
 		copyHeaders(request.Header, &r.Header)
 		request.URL.Scheme = "http"
 		request.URL.Host = "localhost:" + servers[count]
@@ -55,12 +53,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return makeResponse(cachedResponse)
 	}
 
-	resp, err = t.RoundTripper.RoundTrip(req)
-	if err != nil {
-		log.Println("Could not connect to server")
-		return
-	}
-	return resp, nil
+	return roundTrip(req, t)
 }
 
 func makeResponse(cachedResponse string) (resp *http.Response, err error) {
@@ -72,17 +65,24 @@ func makeResponse(cachedResponse string) (resp *http.Response, err error) {
 }
 
 func executeRequestAndSave(req *http.Request, t *transport) (resp *http.Response, err error) {
-	resp, err = t.RoundTripper.RoundTrip(req)
-	if err != nil {
-		log.Println("Could not connect to server")
-		return
-	}
+	resp, err = roundTrip(req, t)
 
-	set := r.set(req, resp, 5)
-	log.Println("Added to cache " + set)
+	var set string
+	if resp.StatusCode == http.StatusOK {
+		set = r.set(req, resp, 5)
+		log.Println("Added to cache " + set)
+	}
 
 	return &http.Response{
 		StatusCode: resp.StatusCode,
 		Body:       ioutil.NopCloser(strings.NewReader(set)),
 	}, nil
+}
+
+func roundTrip(req *http.Request, t *transport) (resp *http.Response, err error) {
+	resp, err = t.RoundTripper.RoundTrip(req)
+	if err != nil {
+		log.Println("Could not connect to server", err)
+	}
+	return
 }

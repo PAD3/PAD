@@ -8,16 +8,21 @@ import (
 
 var r *Redis
 
+type proxyHandler struct {
+	ports []string
+}
+
+func (h *proxyHandler) handle(w http.ResponseWriter, r *http.Request) {
+	runReverseProxy(h.ports, r, w)
+}
+
 func main() {
 	var err error
 	r, err = newRedis("redis://sylar:@localhost:6379/0")
-	if err != nil {
-		log.Fatal("Could not connect to Redis")
-	}
+	handleError(err, "Could not connect to Redis")
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		runReverseProxy(os.Args, r, w)
-	})
+	handler := &proxyHandler{ports: os.Args}
+	http.HandleFunc("/", handler.handle)
 
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
