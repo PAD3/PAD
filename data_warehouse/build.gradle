@@ -17,6 +17,7 @@ apply plugin: 'kotlin-kapt'
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -31,6 +32,7 @@ dependencies {
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.2'
     compile ('com.baidu.unbiz:fluent-validator-jsr303:1.0.9') {
     }
+    compile 'com.github.kittinunf.fuel:fuel:1.11.0'
     compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '4.23'
     compile group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '4.23'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'

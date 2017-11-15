@@ -2,8 +2,9 @@ package pad
 
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Logger
-import pad.controller.DefaultDataController
+import pad.controller.DataController
 import pad.injection.DaggerMainComponent
+import spark.Spark.port
 
 object Runner {
     var mainComponent = DaggerMainComponent.builder()
@@ -13,9 +14,14 @@ object Runner {
 
     @JvmStatic
     fun main(args: Array<String>) {
+        if (args.isNotEmpty()) {
+            val port = args[0].toIntOrNull()
+            port?.let {
+                port(port)
+            }
+        }
         BasicConfigurator.configure()
-        /*logger.level = Level.DEBUG*/
-        val dataController = DefaultDataController()
+        val dataController = DataController()
         dataController.init()
         logger.debug("HEY!")
     }
