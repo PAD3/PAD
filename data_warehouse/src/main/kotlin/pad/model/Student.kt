@@ -23,4 +23,7 @@ class Student {
     @ForeignCollectionField
     @JsonIgnore
     var books: Collection<Book> = mutableListOf()
+
+    val links : List<Link>
+    get() = listOf(Link("self","http://localhost:4567/students/$id"))
 }

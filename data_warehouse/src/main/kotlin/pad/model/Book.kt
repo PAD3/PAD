@@ -26,4 +26,6 @@ class Book {
     @JsonIgnore
     lateinit var student : Student
 
+    val links : List<Link>
+        get() = listOf(Link("self","http://localhost:4567/student/${student.id}/id"))
 }
