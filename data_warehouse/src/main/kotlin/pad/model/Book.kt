@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.j256.ormlite.field.DatabaseField
 import com.j256.ormlite.table.DatabaseTable
 import pad.dao.BookDao
+import pad.hateoas.Link
 
 @DatabaseTable(daoClass = BookDao::class)
 class Book {
@@ -27,5 +28,7 @@ class Book {
     lateinit var student : Student
 
     val links : List<Link>
-        get() = listOf(Link("self","http://localhost:4567/student/${student.id}/id"))
+        get() = listOf(Link("self", "http://localhost:4567/students/${student.id}/books/id"),
+                Link("student.books", "http://localhost:4567/students/${student.id}/books"),
+                Link("student", "http://localhost:4567/students/${student.id}"))
 }

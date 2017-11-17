@@ -2,20 +2,35 @@ package pad.serialization
 
 import org.eclipse.jetty.http.HttpStatus
 import spark.ModelAndView
+import spark.Request
+import spark.Response
 import spark.Spark.halt
 
 data class ResponseMessage(val code: Int, val error: List<String>,
                            val response: Any? = null)
 
-class ResponseBuilder {
+class ResponseBuilder(req: Request, private val res: Response) {
     var code: Int = HttpStatus.OK_200
         private set
     var error: MutableList<String> = mutableListOf()
         private set
-    var header : String? = null
+    var header: Format? = null
         private set
     var response: Any? = null
         private set
+
+    init {
+        this.header = Format.fromString(req.headers("Accept"))
+        if (this.header == Format.INVALID) {
+            halt(HttpStatus.NOT_ACCEPTABLE_406)
+        } else
+            res.header("Content-Type", this.header.toString())
+    }
+
+    fun header(header: Pair<String, String?>): ResponseBuilder {
+        this.res.header(header.first, header.second)
+        return this
+    }
 
     fun code(code: Int): ResponseBuilder {
         this.code = code
@@ -27,15 +42,8 @@ class ResponseBuilder {
         return this
     }
 
-    fun error(error : String) : ResponseBuilder {
-        this.error.add(error)
-        return this
-    }
-
-    fun header(header : String): ResponseBuilder {
-        this.header = header
-        if (header == "application/jora")
-            halt(HttpStatus.NOT_ACCEPTABLE_406)
+    fun error(error: String?): ResponseBuilder {
+        error?.apply { this@ResponseBuilder.error.add(this) }
         return this
     }
 
@@ -44,7 +52,7 @@ class ResponseBuilder {
         return this
     }
 
-    fun getModel() = ModelAndView(ResponseMessage(code, error, response),header)
+    fun getModel() = ModelAndView(ResponseMessage(code, error, response), header.toString())
 
     fun getResponseMessage() = ResponseMessage(code, error, response)
 

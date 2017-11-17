@@ -5,6 +5,7 @@ import com.j256.ormlite.field.DatabaseField
 import com.j256.ormlite.field.ForeignCollectionField
 import com.j256.ormlite.table.DatabaseTable
 import pad.dao.StudentDao
+import pad.hateoas.Link
 
 @DatabaseTable(daoClass = StudentDao::class)
 class Student {
@@ -25,5 +26,5 @@ class Student {
     var books: Collection<Book> = mutableListOf()
 
     val links : List<Link>
-    get() = listOf(Link("self","http://localhost:4567/students/$id"))
+    get() = listOf(Link("self", "http://localhost:4567/students/$id"))
 }

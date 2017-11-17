@@ -34,9 +34,9 @@ class DataController : AbstractController() {
     }
 
     fun getBooks(req: Request, res: Response): ModelAndView {
-        val responseBuilder = ResponseBuilder()
-        responseBuilder.header(req.headers("Accept"))
-        responseBuilder.response(dataService.getBooks(req.params("id")))
+        val responseBuilder = ResponseBuilder(req, res)
+        val response = dataService.getBooks(req.params("id"))
+        responseBuilder.response(response.body)
         return responseBuilder.getModel()
     }
 
@@ -47,7 +47,7 @@ class DataController : AbstractController() {
         val author = req.queryParams("author")
         val desc = req.queryParams("desc")
         val year = req.queryParams("year")?.toIntOrNull()
-        var responseBuilder = ResponseBuilder()
+        val responseBuilder = ResponseBuilder(req, res)
         val result = FluentValidator.checkAll()
                 .setIsFailFast(false)
                 .on(idStudent, IdValidator("idStudent"))
@@ -58,15 +58,15 @@ class DataController : AbstractController() {
                 .doValidate()
                 .result(toSimple())
         if (result.isSuccess) {
-            val book = dataService.createBook(idStudent.toString(), title, author, year!!, desc)
-            if (book != null) {
+            val response = dataService.createBook(idStudent.toString(), title, author, year!!, desc)
+            if (response.body != null) {
                 responseBuilder
-                        .response(book)
+                        .response(response.body)
                         .code(HttpStatus.OK_200)
             } else {
                 responseBuilder
                         .code(HttpStatus.BAD_REQUEST_400)
-                        .error("Student not found!")
+                        .error(response.errorMessage)
             }
         } else {
             responseBuilder
@@ -76,19 +76,27 @@ class DataController : AbstractController() {
     }
 
     fun getStudents(req: Request, res: Response): ModelAndView {
-        return ModelAndView(dataService.getStudents(), req.headers("Accept"))
+        val responseBuilder = ResponseBuilder(req, res)
+        val response = dataService.getStudents()
+        responseBuilder.response(response.body)
+        return responseBuilder.getModel()
     }
 
     fun getStudent(req: Request, res: Response): ModelAndView {
-        return ModelAndView(dataService.getStudent(req.params("id")), req.headers("Accept"))
+        val responseBuilder = ResponseBuilder(req, res)
+        val response = dataService.getStudent(req.params("id"))
+        responseBuilder.response(response.body)
+        responseBuilder
+                .code(HttpStatus.NOT_FOUND_404)
+                .error("Student not found!")
+        return responseBuilder.getModel()
     }
 
     fun addStudent(req: Request, res: Response): ModelAndView {
         val studentName = req.queryParams("name")
         val studentPhone = req.queryParams("phone")
         val studentYear = req.queryParams("year")?.toIntOrNull()
-        val responseBuilder = ResponseBuilder()
-                .header(req.headers("Accept"))
+        val responseBuilder = ResponseBuilder(req, res)
         val result = FluentValidator.checkAll()
                 .setIsFailFast(false)
                 .on(studentName, NameValidator("Name"))
@@ -97,7 +105,11 @@ class DataController : AbstractController() {
                 .doValidate()
                 .result(toSimple())
         if (result.isSuccess) {
-            responseBuilder.response(dataService.createStudent(studentName, studentPhone, studentYear!!))
+            val response = dataService.createStudent(studentName, studentPhone, studentYear!!)
+            responseBuilder
+                    .code(HttpStatus.CREATED_201)
+                    .response(response.body)
+                    .header(Pair("Location", response.link))
         } else
             responseBuilder
                     .error(result.errors)

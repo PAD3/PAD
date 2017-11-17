@@ -5,6 +5,7 @@ import pad.Runner
 import pad.dao.BookDao
 import pad.dao.StudentDao
 import pad.model.Book
+import pad.model.ServiceResponse
 import pad.model.Student
 import spark.Spark.halt
 import javax.inject.Inject
@@ -24,40 +25,38 @@ class DataService @Inject constructor() {
         Runner.mainComponent.inject(this)
     }
 
-    fun getStudent(id: String): Student? {
+    fun getStudent(id: String): ServiceResponse<Student?> {
         try {
-            return studentDao.queryForId(id.toString())
+            return ServiceResponse(studentDao.queryForId(id))
         } catch (e: SQLException) {
-            halt(500)
-            return null
+            return ServiceResponse()
         }
     }
 
-    fun getStudents(): List<Student> {
+    fun getStudents(): ServiceResponse<List<Student>> {
         try {
-            return studentDao.queryForAll()
+            return ServiceResponse(studentDao.queryForAll())
         } catch (e: SQLException) {
-            return ArrayList()
+            return ServiceResponse(null, e.message)
         }
 
     }
 
-    fun createStudent(name: String, phone : String, year: Int): Student? {
+    fun createStudent(name: String, phone : String, year: Int): ServiceResponse<Student> {
         try {
             val student = Student()
             student.name = name
             student.year = year
             student.phone = phone
             studentDao.create(student)
-            return student
+            return ServiceResponse(student,link = "http://localhost:4567/students/${student.id}")
         } catch (e: SQLException) {
-            halt(500)
-            return null
+            return ServiceResponse(null, e.message)
         }
     }
 
-    fun createBook(idStudent: String, title: String, author: String, year: Int, desc: String?): Book? {
-        val student = studentDao.queryForId(idStudent) ?: return null
+    fun createBook(idStudent: String, title: String, author: String, year: Int, desc: String?): ServiceResponse<Book> {
+        val student = studentDao.queryForId(idStudent) ?: return ServiceResponse(null, "Student not found")
         val book = Book()
         book.author = author
         book.title = title
@@ -67,16 +66,16 @@ class DataService @Inject constructor() {
         try {
             bookDao.create(book)
         } catch (e: SQLException) {
-            return null
+            return ServiceResponse(null, e.message,null)
         }
-        return book
+        return ServiceResponse(book, link = "http://localhost:4567/students/${student.id}/books/${book.id}")
     }
 
-    fun getBooks(idStudent: String) : List<Book> {
+    fun getBooks(idStudent: String) : ServiceResponse<List<Book>> {
         try {
-            return studentDao.queryForId(idStudent).books.toList()
+            return ServiceResponse(studentDao.queryForId(idStudent).books.toList())
         } catch (e: SQLException) {
-            return ArrayList()
+            return ServiceResponse(null, e.message,null)
         }
     }
 
