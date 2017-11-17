@@ -86,9 +86,10 @@ class DataController : AbstractController() {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getStudent(req.params("id"))
         responseBuilder.response(response.body)
-        responseBuilder
-                .code(HttpStatus.NOT_FOUND_404)
-                .error("Student not found!")
+        if (response.body == null)
+            responseBuilder
+                    .code(HttpStatus.NOT_FOUND_404)
+                    .error("Student not found!")
         return responseBuilder.getModel()
     }
 
