@@ -23,9 +23,6 @@ class DataController : AbstractController() {
     override fun init() {
         Runner.mainComponent.inject(this)
         val templateEngine = DefaultTemplateEngine()
-        after(Filter { req, res ->
-            res.header("Content-Type", Format.fromString(req.headers("Accept")).toString())
-        })
         get("/students", this::getStudents, templateEngine)
         get("/students/:id", this::getStudent, templateEngine)
         get("/students/:id/books", this::getBooks, templateEngine)

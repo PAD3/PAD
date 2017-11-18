@@ -1,6 +1,7 @@
 package pad.serialization
 
 import org.eclipse.jetty.http.HttpStatus
+import pad.Runner
 import spark.ModelAndView
 import spark.Request
 import spark.Response
@@ -20,7 +21,8 @@ class ResponseBuilder(req: Request, private val res: Response) {
         private set
 
     init {
-        this.header = Format.fromString(req.headers("Accept"))
+        this.header = Format.parseHeader(req.headers("Accept"))
+        Runner.logger.error("HEAD::: ${req.headers("Accept")} ~~~  ${this.header}")
         if (this.header == Format.INVALID) {
             halt(HttpStatus.NOT_ACCEPTABLE_406)
         } else
