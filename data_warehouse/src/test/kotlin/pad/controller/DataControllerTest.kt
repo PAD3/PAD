@@ -6,6 +6,8 @@ import org.junit.jupiter.api.*
 
 import org.junit.jupiter.api.Assertions.*
 import pad.Runner
+import pad.hateoas.Hateoas
+import pad.hateoas.HateoasNode
 import pad.http.HttpChecker
 import pad.http.check
 
@@ -13,31 +15,22 @@ import pad.http.check
 internal class DataControllerTest {
 
 
-    @BeforeAll
-    fun setup() {
-        Runner.main(arrayOf("8080"))
-    }
-
     @AfterAll()
     fun teardown() {
 
     }
 
     @Test
-    fun getBooks() {
-        val result = "http://localhost:8080/students/1/books".httpGet().check(object : HttpChecker {
-            override fun checkStatusCode(statusCode: Int) {
-                assertEquals(statusCode, HttpStatus.OK_200)
-            }
-
-            override fun checkHeaders(headers: Map<String, List<String>>) {
-
-            }
-
-            override fun checkBody(body: String) {
-
-            }
-        })
+    fun testAnnotations() {
+        val dataController = DataController()
+        println(dataController.javaClass.methods
+                .map { it.getAnnotationsByType(Hateoas::class.java) }
+                .filter { it.isNotEmpty() }
+                .map {
+                    val annotation = it[0]
+                    HateoasNode(annotation.rel, annotation.linkFormat, annotation.params.toList())
+                }
+                .toList())
     }
 
 }

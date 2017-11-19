@@ -23,7 +23,7 @@ class Book {
     @DatabaseField(canBeNull = true)
     var desc : String? = null
 
-    @DatabaseField(foreign = true)
+    @DatabaseField(foreign = true, columnName = "student_id")
     @JsonIgnore
     lateinit var student : Student
 

@@ -42,14 +42,14 @@ class DataService @Inject constructor() {
 
     }
 
-    fun createStudent(name: String, phone : String, year: Int): ServiceResponse<Student> {
+    fun createStudent(name: String, phone: String, year: Int): ServiceResponse<Student> {
         try {
             val student = Student()
             student.name = name
             student.year = year
             student.phone = phone
             studentDao.create(student)
-            return ServiceResponse(student,link = "http://localhost:4567/students/${student.id}")
+            return ServiceResponse(student, link = "http://localhost:4567/students/${student.id}")
         } catch (e: SQLException) {
             return ServiceResponse(null, e.message)
         }
@@ -66,16 +66,24 @@ class DataService @Inject constructor() {
         try {
             bookDao.create(book)
         } catch (e: SQLException) {
-            return ServiceResponse(null, e.message,null)
+            return ServiceResponse(null, e.message, null)
         }
         return ServiceResponse(book, link = "http://localhost:4567/students/${student.id}/books/${book.id}")
     }
 
-    fun getBooks(idStudent: String) : ServiceResponse<List<Book>> {
+    fun getBooks(idStudent: String): ServiceResponse<List<Book>> {
         try {
             return ServiceResponse(studentDao.queryForId(idStudent).books.toList())
         } catch (e: SQLException) {
-            return ServiceResponse(null, e.message,null)
+            return ServiceResponse(null, e.message, null)
+        }
+    }
+
+    fun getBook(idStudent: String, idBook: String): ServiceResponse<Book> {
+        try {
+            return ServiceResponse(bookDao.queryBuilder().limit(1).where().eq("student_id", idStudent).and().eq("id", idBook).query().firstOrNull())
+        } catch (e: SQLException) {
+            return ServiceResponse(null, e.message, null)
         }
     }
 

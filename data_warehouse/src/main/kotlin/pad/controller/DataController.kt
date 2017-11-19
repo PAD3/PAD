@@ -4,6 +4,7 @@ import com.baidu.unbiz.fluentvalidator.FluentValidator
 import com.baidu.unbiz.fluentvalidator.ResultCollectors.toSimple
 import org.eclipse.jetty.http.HttpStatus
 import pad.Runner
+import pad.hateoas.Hateoas
 import pad.serialization.DefaultTemplateEngine
 import pad.serialization.Format
 import pad.serialization.ResponseBuilder
@@ -24,22 +25,23 @@ class DataController : AbstractController() {
         Runner.mainComponent.inject(this)
         val templateEngine = DefaultTemplateEngine()
         get("/students", this::getStudents, templateEngine)
-        get("/students/:id", this::getStudent, templateEngine)
-        get("/students/:id/books", this::getBooks, templateEngine)
+        get("/students/:studentId", this::getStudent, templateEngine)
+        get("/students/:studentId/books", this::getBooks, templateEngine)
+        get("/students/:studentId/books/:bookId", this::getBook, templateEngine)
         post("/students", this::addStudent, templateEngine)
-        post("/students/:id/books", this::addBook, templateEngine)
+        post("/students/:studentId/books", this::addBook, templateEngine)
     }
 
     fun getBooks(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
-        val response = dataService.getBooks(req.params("id"))
+        val response = dataService.getBooks(req.params("studentId"))
         responseBuilder.response(response.body)
         return responseBuilder.getModel()
     }
 
 
     fun addBook(req: Request, res: Response): ModelAndView {
-        val idStudent = req.params("id")?.toIntOrNull()
+        val idStudent = req.params("studentId")?.toIntOrNull()
         val title = req.queryParams("title")
         val author = req.queryParams("author")
         val desc = req.queryParams("desc")
@@ -72,6 +74,20 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
+    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/:bookId", params = arrayOf("studentId", "bookId"))
+    fun getBook(req: Request, res: Response): ModelAndView {
+        val responseBuilder = ResponseBuilder(req, res)
+        val response = dataService.getBook(req.params("studentId"), req.params("bookId"))
+        if (response.body == null)
+            responseBuilder
+                    .code(HttpStatus.NOT_FOUND_404)
+                    .error("Book not found!")
+        responseBuilder.response(response.body)
+        return responseBuilder.getModel()
+    }
+
+
+    @Hateoas(rel = "students.list", linkFormat = "/students")
     fun getStudents(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getStudents()
@@ -79,9 +95,10 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
+    @Hateoas(rel = "students.get", linkFormat = "/students/:studentId", params = arrayOf("studentId", "bookId"))
     fun getStudent(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
-        val response = dataService.getStudent(req.params("id"))
+        val response = dataService.getStudent(req.params("studentId"))
         responseBuilder.response(response.body)
         if (response.body == null)
             responseBuilder
