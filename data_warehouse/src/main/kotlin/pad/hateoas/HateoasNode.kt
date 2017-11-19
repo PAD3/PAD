@@ -9,7 +9,7 @@ data class HateoasNode(val rel: String, val linkFormat: String, val params: List
     private fun formatToRegex(linkFormat: String, params: List<String>): Regex {
         var result: String = linkFormat
         for (name in params) {
-            result = result.replace(":$name", HateoasProvider.paramRegex)
+            result = result.replace(":$name", "\\w+")
         }
         return result.toRegex()
     }

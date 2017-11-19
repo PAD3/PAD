@@ -23,7 +23,7 @@ internal class DataControllerTest {
 
     @Test
     fun testPathProcess() {
-        HateoasProvider.inspect(DataController())
+        println(HateoasProvider.getParamsFromLinkFormat("/students/:studentId/books/:bookId"))
     }
 
 }

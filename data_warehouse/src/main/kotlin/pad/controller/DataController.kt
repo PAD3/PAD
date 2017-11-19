@@ -33,7 +33,7 @@ class DataController : AbstractController() {
         post("/students/:studentId/books", this::addBook, templateEngine)
     }
 
-    @Hateoas(rel = "student.books.list", linkFormat = "/students/:studentId/books", params = arrayOf("studentId"),
+    @Hateoas(rel = "student.books.list", linkFormat = "/students/:studentId/books",
             rootForDto = arrayOf(BookDto::class))
     fun getBooks(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
@@ -77,7 +77,7 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/books/:bookId", params = arrayOf("studentId", "bookId"))
+    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/books/:bookId")
     fun getBook(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getBook(req.params("studentId"), req.params("bookId"))
@@ -98,7 +98,7 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    @Hateoas(rel = "students.get", linkFormat = "/students/:studentId", params = arrayOf("studentId"),
+    @Hateoas(rel = "students.get", linkFormat = "/students/:studentId",
             rootForDto = arrayOf(StudentDto::class))
     fun getStudent(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)

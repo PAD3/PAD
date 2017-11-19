@@ -8,15 +8,14 @@ import kotlin.reflect.full.memberProperties
 
 object HateoasProvider {
     val nodes: MutableList<HateoasNode> = mutableListOf()
-    val paramRegex = "\\w+"
-    val restCache: MutableMap<HateoasNode, List<HateoasNode>> = mutableMapOf()
+    private val restCache: MutableMap<HateoasNode, List<HateoasNode>> = mutableMapOf()
     fun inspect(subject: Any) {
         nodes.addAll(subject.javaClass.methods
                 .map { it.getAnnotationsByType(Hateoas::class.java) }
                 .filter { it.isNotEmpty() }
                 .map {
                     val annotation = it[0]
-                    HateoasNode(annotation.rel, annotation.linkFormat, annotation.params.toList(), annotation.rootForDto.toList())
+                    HateoasNode(annotation.rel, annotation.linkFormat, getParamsFromLinkFormat(annotation.linkFormat), annotation.rootForDto.toList())
                 }
                 .toList())
     }
@@ -34,7 +33,7 @@ object HateoasProvider {
         return links
     }
 
-    fun getLinks(dto: Dto, topLinks : List<Link>): List<Link> {
+    fun getLinks(dto: Dto, topLinks: List<Link>): List<Link> {
         val params = getParamsFromDto(dto)
         Runner.logger.debug("params = $params")
         val node = nodes.firstOrNull { it.dtos.contains(dto::class) } ?: return listOf()
@@ -44,7 +43,22 @@ object HateoasProvider {
         return links
     }
 
-    private fun getParamsFromDto(dto: Any) : Map<String,String> {
+    fun getParamsFromLinkFormat(linkFormat: String): List<String> {
+        return "/:\\w+(/|$)".toRegex().findAll(linkFormat)
+                .filter { it.groupValues.isNotEmpty() }
+                .map {
+                    it.groupValues.toList()
+                }
+                .flatten()
+                .map {
+                    it.replace("[/:]".toRegex(), "")
+                }
+                .filter { it.isNotEmpty() }
+                .toList()
+    }
+
+
+    private fun getParamsFromDto(dto: Any): Map<String, String> {
         val params = mutableMapOf<String, String>()
         dto::class.memberProperties.forEach {
             val annotation = it.findAnnotation<HateoasParam>()
@@ -58,11 +72,11 @@ object HateoasProvider {
     }
 
     private fun makeLink(linkFormat: String, params: Map<String, String>): String {
-        var result: String = linkFormat.replace(":","")
+        var result: String = linkFormat.replace(":", "")
         Runner.logger.debug("making link $linkFormat    $params")
         for ((name, value) in params) {
             Runner.logger.debug("replacing $name with $value")
-            result = result.replace(name.removePrefix(":"), value,ignoreCase = true)
+            result = result.replace(name.removePrefix(":"), value, ignoreCase = true)
         }
         return "${Runner.baseUrl}$result"
     }
