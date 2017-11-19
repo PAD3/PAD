@@ -26,9 +26,4 @@ class Book {
     @DatabaseField(foreign = true, columnName = "student_id")
     @JsonIgnore
     lateinit var student : Student
-
-    val links : List<Link>
-        get() = listOf(Link("self", "http://localhost:4567/students/${student.id}/books/id"),
-                Link("student.books", "http://localhost:4567/students/${student.id}/books"),
-                Link("student", "http://localhost:4567/students/${student.id}"))
 }

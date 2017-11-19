@@ -4,17 +4,18 @@ import com.baidu.unbiz.fluentvalidator.FluentValidator
 import com.baidu.unbiz.fluentvalidator.ResultCollectors.toSimple
 import org.eclipse.jetty.http.HttpStatus
 import pad.Runner
+import pad.dto.BookDto
+import pad.dto.StudentDto
 import pad.hateoas.Hateoas
 import pad.serialization.DefaultTemplateEngine
-import pad.serialization.Format
 import pad.serialization.ResponseBuilder
 import pad.service.DataService
 import pad.validator.*
-import spark.Filter
 import spark.ModelAndView
 import spark.Request
 import spark.Response
-import spark.Spark.*
+import spark.Spark.get
+import spark.Spark.post
 import javax.inject.Inject
 
 class DataController : AbstractController() {
@@ -32,10 +33,12 @@ class DataController : AbstractController() {
         post("/students/:studentId/books", this::addBook, templateEngine)
     }
 
+    @Hateoas(rel = "student.books.list", linkFormat = "/students/:studentId/books", params = arrayOf("studentId"),
+            rootForDto = arrayOf(BookDto::class))
     fun getBooks(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
-        val response = dataService.getBooks(req.params("studentId"))
-        responseBuilder.response(response.body)
+        val response = dataService.getBooks(req.params("studentId")).body
+        responseBuilder.response(response)
         return responseBuilder.getModel()
     }
 
@@ -61,7 +64,7 @@ class DataController : AbstractController() {
             if (response.body != null) {
                 responseBuilder
                         .response(response.body)
-                        .code(HttpStatus.OK_200)
+                        .code(HttpStatus.CREATED_201)
             } else {
                 responseBuilder
                         .code(HttpStatus.BAD_REQUEST_400)
@@ -74,7 +77,7 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/:bookId", params = arrayOf("studentId", "bookId"))
+    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/books/:bookId", params = arrayOf("studentId", "bookId"))
     fun getBook(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getBook(req.params("studentId"), req.params("bookId"))
@@ -95,7 +98,8 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    @Hateoas(rel = "students.get", linkFormat = "/students/:studentId", params = arrayOf("studentId", "bookId"))
+    @Hateoas(rel = "students.get", linkFormat = "/students/:studentId", params = arrayOf("studentId"),
+            rootForDto = arrayOf(StudentDto::class))
     fun getStudent(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getStudent(req.params("studentId"))
@@ -124,7 +128,6 @@ class DataController : AbstractController() {
             responseBuilder
                     .code(HttpStatus.CREATED_201)
                     .response(response.body)
-                    .header(Pair("Location", response.link))
         } else
             responseBuilder
                     .error(result.errors)

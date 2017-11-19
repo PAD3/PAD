@@ -1,14 +1,18 @@
 package pad.serialization
 
+import com.sun.org.apache.xpath.internal.operations.Mod
 import org.eclipse.jetty.http.HttpStatus
 import pad.Runner
+import pad.dto.Dto
+import pad.hateoas.HateoasProvider
+import pad.hateoas.Link
 import spark.ModelAndView
 import spark.Request
 import spark.Response
 import spark.Spark.halt
 
 data class ResponseMessage(val code: Int, val error: List<String>,
-                           val response: Any? = null)
+                           val response: Any? = null, val links: List<Link> = listOf())
 
 class ResponseBuilder(req: Request, private val res: Response) {
     var code: Int = HttpStatus.OK_200
@@ -19,6 +23,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
         private set
     var response: Any? = null
         private set
+    var links: List<Link> = HateoasProvider.getLinks(req)
 
     init {
         this.header = Format.parseHeader(req.headers("Accept"))
@@ -49,13 +54,27 @@ class ResponseBuilder(req: Request, private val res: Response) {
         return this
     }
 
-    fun response(response: Any?): ResponseBuilder {
+    fun response(response: Dto?): ResponseBuilder {
+        response?.apply {
+            this.links = HateoasProvider.getLinks(this, links)
+        }
         this.response = response
         return this
     }
 
-    fun getModel() = ModelAndView(ResponseMessage(code, error, response), header.toString())
+    fun response(response: List<out Dto>?): ResponseBuilder {
+        response?.apply {
+            this.forEach { it.links = HateoasProvider.getLinks(it, links) }
+        }
+        this.response = response
+        return this
+    }
 
-    fun getResponseMessage() = ResponseMessage(code, error, response)
+    fun getModel(): ModelAndView {
+        if (code == HttpStatus.CREATED_201)
+            res.header("Location", (response as Dto).links.firstOrNull { it.rel == "self" }?.href)
+        return ModelAndView(ResponseMessage(code, error, response, links), header.toString())
+    }
+
 
 }

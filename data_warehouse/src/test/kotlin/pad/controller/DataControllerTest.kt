@@ -1,15 +1,9 @@
 package pad.controller
 
-import com.github.kittinunf.fuel.httpGet
-import org.eclipse.jetty.http.HttpStatus
-import org.junit.jupiter.api.*
-
-import org.junit.jupiter.api.Assertions.*
-import pad.Runner
-import pad.hateoas.Hateoas
-import pad.hateoas.HateoasNode
-import pad.http.HttpChecker
-import pad.http.check
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import pad.hateoas.HateoasProvider
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DataControllerTest {
@@ -22,15 +16,14 @@ internal class DataControllerTest {
 
     @Test
     fun testAnnotations() {
-        val dataController = DataController()
-        println(dataController.javaClass.methods
-                .map { it.getAnnotationsByType(Hateoas::class.java) }
-                .filter { it.isNotEmpty() }
-                .map {
-                    val annotation = it[0]
-                    HateoasNode(annotation.rel, annotation.linkFormat, annotation.params.toList())
-                }
-                .toList())
+        HateoasProvider.inspect(DataController())
+        println(HateoasProvider.nodes)
+        println()
+    }
+
+    @Test
+    fun testPathProcess() {
+        HateoasProvider.inspect(DataController())
     }
 
 }
