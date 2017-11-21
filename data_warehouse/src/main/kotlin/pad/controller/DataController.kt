@@ -14,8 +14,7 @@ import pad.validator.*
 import spark.ModelAndView
 import spark.Request
 import spark.Response
-import spark.Spark.get
-import spark.Spark.post
+import spark.Spark.*
 import javax.inject.Inject
 
 class DataController : AbstractController() {
@@ -29,12 +28,21 @@ class DataController : AbstractController() {
         get("/students/:studentId", this::getStudent, templateEngine)
         get("/students/:studentId/books", this::getBooks, templateEngine)
         get("/students/:studentId/books/:bookId", this::getBook, templateEngine)
+        get("/*", this::notFound, templateEngine)
+        post("/*", this::notFound, templateEngine)
+        put("/*", this::notFound, templateEngine)
         post("/students", this::addStudent, templateEngine)
         post("/students/:studentId/books", this::addBook, templateEngine)
     }
 
-    @Hateoas(rel = "student.books.list", linkFormat = "/students/:studentId/books",
-            rootForDto = arrayOf(BookDto::class))
+    fun notFound(req: Request, res: Response): ModelAndView {
+        return ResponseBuilder(req,res)
+                .code(HttpStatus.NOT_FOUND_404)
+                .error("Route not found!")
+                .getModel()
+    }
+
+    @Hateoas(rel = "student.books.list", linkFormat = "/students/:studentId/books")
     fun getBooks(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getBooks(req.params("studentId")).body
@@ -77,7 +85,8 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/books/:bookId")
+    @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/books/:bookId",
+            rootForDto = arrayOf(BookDto::class))
     fun getBook(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getBook(req.params("studentId"), req.params("bookId"))

@@ -23,7 +23,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
         private set
     var response: Any? = null
         private set
-    var links: List<Link> = HateoasProvider.getLinks(req)
+    private val globalLinks: List<Link> = HateoasProvider.getLinks(req)
 
     init {
         this.header = Format.parseHeader(req.headers("Accept"))
@@ -56,7 +56,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
 
     fun response(response: Dto?): ResponseBuilder {
         response?.apply {
-            this.links = HateoasProvider.getLinks(this, links)
+            this.links = HateoasProvider.getLinks(this, globalLinks)
         }
         this.response = response
         return this
@@ -64,7 +64,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
 
     fun response(response: List<out Dto>?): ResponseBuilder {
         response?.apply {
-            this.forEach { it.links = HateoasProvider.getLinks(it, links) }
+            this.forEach { it.links = HateoasProvider.getLinks(it, globalLinks) }
         }
         this.response = response
         return this
@@ -73,7 +73,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
     fun getModel(): ModelAndView {
         if (code == HttpStatus.CREATED_201)
             res.header("Location", (response as Dto).links.firstOrNull { it.rel == "self" }?.href)
-        return ModelAndView(ResponseMessage(code, error, response, links), header.toString())
+        return ModelAndView(ResponseMessage(code, error, response, globalLinks), header.toString())
     }
 
 

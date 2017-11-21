@@ -8,7 +8,7 @@ import pad.hateoas.Link
 
 @DatabaseTable(daoClass = BookDao::class)
 class Book {
-    @DatabaseField(generatedId = true)
+    @DatabaseField(id = true)
     var id : Int = 0
 
     @DatabaseField

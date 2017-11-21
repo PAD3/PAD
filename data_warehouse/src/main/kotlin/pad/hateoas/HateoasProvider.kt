@@ -34,11 +34,14 @@ object HateoasProvider {
     }
 
     fun getLinks(dto: Dto, topLinks: List<Link>): List<Link> {
+        val alreadyLinks = topLinks.map { it.href }
+        Runner.logger.debug("already get = $topLinks ${dto.javaClass.name}")
         val params = getParamsFromDto(dto)
         Runner.logger.debug("params = $params")
         val node = nodes.firstOrNull { it.dtos.contains(dto::class) } ?: return listOf()
-        val links = nodes.asSequence().filter { it != node && node.params.containsAll(it.params) }.map { Link(it.rel, makeLink(it.linkFormat, params)) }.toMutableList()
-        links.removeAll(topLinks)
+        var links = nodes.asSequence().filter { it != node && node.params.containsAll(it.params) }
+                .map { Link(it.rel, makeLink(it.linkFormat, params)) }.toMutableList()
+        links = links.filter { !alreadyLinks.contains(it.href) }.toMutableList()
         links.add(Link("self", makeLink(node.linkFormat, params)))
         return links
     }
