@@ -27,7 +27,7 @@ class DatabaseModule {
             connectionSource.setPassword("i_love_pad")
             return connectionSource
         } catch (e: SQLException) {
-            throw RuntimeException("Cannot access database!")
+            throw RuntimeException("Cannot access database!",e)
         }
 
     }

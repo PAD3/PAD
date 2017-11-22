@@ -20,32 +20,36 @@ enum class Format constructor(private val customName: String) {
             else -> INVALID
         }
 
-        fun parseHeader(header: String) =
-                fromString(header.replace(" ", "")
-                        .split(",").asSequence()
-                        .filter { mediaTypeRegex.find(it) != null }
-                        .map {
-                            val mediaType = mediaTypeRegex.find(it)!!.groupValues.first()
-                            val (type, subtype) = mediaType.split("/")
-                            val q = qRegex.find(it)?.groupValues?.first()?.split("=")?.get(1)?.toFloatOrNull() ?: 1f
-                            return@map FormatVariant(type, subtype, q)
+        fun parseHeader(header: String): Format {
+            val resultHeader = header.replace(" ", "")
+                    .split(",").asSequence()
+                    .filter { mediaTypeRegex.find(it) != null }
+                    .map {
+                        val mediaType = mediaTypeRegex.find(it)!!.groupValues.first()
+                        val (type, subtype) = mediaType.split("/")
+                        val q = qRegex.find(it)?.groupValues?.first()?.split("=")?.get(1)?.toFloatOrNull() ?: 1f
+                        println("HEADER-PARSE: ${FormatVariant(type, subtype, q)}")
+                        return@map FormatVariant(type, subtype, q)
+                    }
+                    .filter { it.mime != INVALID }
+                    .sortedWith(Comparator { o1, o2 ->
+                        val compResult = o2.q.compareTo(o1.q)
+                        if (compResult != 0) {
+                            return@Comparator compResult
+                        } else {
+                            return@Comparator if (o2.hasSpecialSubType)
+                                if (o1.hasSpecialSubType) 0 else
+                                    1 else if (o1.hasSpecialSubType) -1 else 0
                         }
-                        .sortedWith(Comparator { o1, o2 ->
-                            val compResult = o2.q.compareTo(o1.q)
-                            if (compResult != 0) {
-                                return@Comparator compResult
-                            } else {
-                                return@Comparator if (o2.hasSpecialSubType)
-                                    if (o1.hasSpecialSubType) 0 else
-                                        1 else if (o1.hasSpecialSubType) -1 else 0
-                            }
-                        }).apply { println(this.joinToString { it.toString() }) }.firstOrNull()?.toString())
-
+                    }).firstOrNull()?.mime
+            return resultHeader ?: INVALID
+        }
     }
 
     private data class FormatVariant(val type: String, val subType: String, val q: Float) {
-        val hasSpecialSubType = subType == "*"
         override fun toString(): String = "$type/$subType"
+        val hasSpecialSubType = subType != "*"
+        val mime = Format.fromString(toString())
     }
 
 }
