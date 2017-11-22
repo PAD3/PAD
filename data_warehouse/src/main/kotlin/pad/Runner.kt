@@ -7,6 +7,10 @@ import pad.hateoas.HateoasProvider
 import pad.injection.DaggerMainComponent
 import spark.Spark.port
 
+
+/**
+ * Runner for debug and tests
+ */
 object Runner {
     var mainComponent = DaggerMainComponent.builder()
             .build()

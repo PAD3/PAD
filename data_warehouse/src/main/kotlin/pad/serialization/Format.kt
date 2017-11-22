@@ -28,7 +28,6 @@ enum class Format constructor(private val customName: String) {
                         val mediaType = mediaTypeRegex.find(it)!!.groupValues.first()
                         val (type, subtype) = mediaType.split("/")
                         val q = qRegex.find(it)?.groupValues?.first()?.split("=")?.get(1)?.toFloatOrNull() ?: 1f
-                        println("HEADER-PARSE: ${FormatVariant(type, subtype, q)}")
                         return@map FormatVariant(type, subtype, q)
                     }
                     .filter { it.mime != INVALID }

@@ -28,11 +28,12 @@ class DataController : AbstractController() {
         get("/students/:studentId", this::getStudent, templateEngine)
         get("/students/:studentId/books", this::getBooks, templateEngine)
         get("/students/:studentId/books/:bookId", this::getBook, templateEngine)
-        get("/*", this::notFound, templateEngine)
-        post("/*", this::notFound, templateEngine)
-        put("/*", this::notFound, templateEngine)
         post("/students", this::addStudent, templateEngine)
         post("/students/:studentId/books", this::addBook, templateEngine)
+        post("/*", this::notFound, templateEngine)
+
+        get("/*", this::notFound, templateEngine)
+        put("/*", this::notFound, templateEngine)
     }
 
     fun notFound(req: Request, res: Response): ModelAndView {
@@ -60,7 +61,7 @@ class DataController : AbstractController() {
         val responseBuilder = ResponseBuilder(req, res)
         val result = FluentValidator.checkAll()
                 .setIsFailFast(false)
-                .on(idStudent, IdValidator("idStudent"))
+                .on(idStudent, IdValidator("studentId"))
                 .on(title, NameValidator("Title"))
                 .on(author, NameValidator("Author"))
                 .on(desc, DescValidator())
