@@ -20,7 +20,9 @@ enum class Format constructor(private val customName: String) {
             else -> INVALID
         }
 
-        fun parseHeader(header: String): Format {
+        fun parseHeader(header: String?): Format {
+            if (header == null)
+                return JSON
             val resultHeader = header.replace(" ", "")
                     .split(",").asSequence()
                     .filter { mediaTypeRegex.find(it) != null }

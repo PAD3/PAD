@@ -54,7 +54,6 @@ class DataService @Inject constructor() {
             studentDao.create(student)
             return ServiceResponse(StudentDto(student))
         } catch (e: SQLException) {
-            throw e
             return ServiceResponse(null, e.message)
         }
     }
