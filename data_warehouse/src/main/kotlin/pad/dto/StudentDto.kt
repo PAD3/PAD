@@ -7,7 +7,7 @@ import pad.model.Student
 
 class StudentDto(student: Student) : Dto {
     @HateoasParam("studentId")
-    val id: Int = student.id
+    val id: String = student.id
 
     val name: String? = student.name
     val year: Int = student.year

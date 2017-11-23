@@ -11,8 +11,8 @@ import spark.Request
 import spark.Response
 import spark.Spark.halt
 
-data class ResponseMessage(val code: Int, val error: List<String>,
-                           val response: Any? = null, val links: List<Link> = listOf())
+data class ResponseMessage(val success: Boolean, val error: List<String>,
+                           val payload: Any? = null, val links: List<Link> = listOf())
 
 class ResponseBuilder(req: Request, private val res: Response) {
     var code: Int = HttpStatus.OK_200
@@ -26,7 +26,8 @@ class ResponseBuilder(req: Request, private val res: Response) {
     private val globalLinks: List<Link> = HateoasProvider.getLinks(req)
 
     init {
-        this.header = Format.parseHeader(req.headers("Accept"))
+        val acceptHeader = req.headers("Accept")
+        this.header = if (acceptHeader == null) Format.JSON else Format.parseHeader(req.headers("Accept"))
         Runner.logger.error("HEAD::: ${req.headers("Accept")} ~~~  ${this.header}")
         if (this.header == Format.INVALID) {
             halt(HttpStatus.NOT_ACCEPTABLE_406)
@@ -62,7 +63,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
         return this
     }
 
-    fun response(response: List<out Dto>?): ResponseBuilder {
+    fun response(response: List<Dto>?): ResponseBuilder {
         response?.apply {
             this.forEach { it.links = HateoasProvider.getLinks(it, globalLinks) }
         }
@@ -71,10 +72,16 @@ class ResponseBuilder(req: Request, private val res: Response) {
     }
 
     fun getModel(): ModelAndView {
+        res.status(code)
+        val isSuccess = isSuccessCode(code)
+        if (code == HttpStatus.NO_CONTENT_204)
+            halt(HttpStatus.NO_CONTENT_204)
         if (code == HttpStatus.CREATED_201)
             res.header("Location", (response as Dto).links.firstOrNull { it.rel == "self" }?.href)
-        return ModelAndView(ResponseMessage(code, error, response, globalLinks), header.toString())
+        return ModelAndView(ResponseMessage(isSuccess, error, response, if (isSuccess) globalLinks else listOf()), header.toString())
     }
+
+    private fun isSuccessCode(code : Int) : Boolean = code >= 200 && code % 100 < 4
 
 
 }

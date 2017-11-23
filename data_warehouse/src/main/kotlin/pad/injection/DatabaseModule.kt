@@ -33,7 +33,6 @@ class DatabaseModule {
         } catch (e: SQLException) {
             throw RuntimeException("Cannot access database!",e)
         }
-
     }
 
     @Singleton

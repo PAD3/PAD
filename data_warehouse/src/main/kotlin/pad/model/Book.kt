@@ -9,7 +9,7 @@ import pad.hateoas.Link
 @DatabaseTable(daoClass = BookDao::class)
 class Book {
     @DatabaseField(id = true)
-    var id : Int = 0
+    lateinit var id : String
 
     @DatabaseField
     var title : String? = null

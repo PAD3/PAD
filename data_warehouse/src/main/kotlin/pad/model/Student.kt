@@ -6,11 +6,12 @@ import com.j256.ormlite.field.ForeignCollectionField
 import com.j256.ormlite.table.DatabaseTable
 import pad.dao.StudentDao
 import pad.hateoas.Link
+import pad.util.UIDUtil
 
 @DatabaseTable(daoClass = StudentDao::class)
 class Student {
-    @DatabaseField(generatedId = true)
-    var id: Int = 0
+    @DatabaseField(id = true)
+    lateinit var id: String
 
     @DatabaseField
     var name: String? = null

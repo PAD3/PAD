@@ -8,7 +8,7 @@ import pad.model.Book
 
 class BookDto(book: Book) : Dto {
     @HateoasParam(name = "bookId")
-    val id: Int = book.id
+    val id: String = book.id
 
     @HateoasParam(name = "studentId")
     @JsonIgnore

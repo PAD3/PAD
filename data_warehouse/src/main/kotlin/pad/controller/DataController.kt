@@ -28,8 +28,9 @@ class DataController : AbstractController() {
         get("/students/:studentId", this::getStudent, templateEngine)
         get("/students/:studentId/books", this::getBooks, templateEngine)
         get("/students/:studentId/books/:bookId", this::getBook, templateEngine)
-        post("/students", this::addStudent, templateEngine)
-        post("/students/:studentId/books", this::addBook, templateEngine)
+        put("/students/:studentId", this::putStudent, templateEngine)
+        post("/students", this::postStudent, templateEngine)
+        post("/students/:studentId/books", this::postBook, templateEngine)
         post("/*", this::notFound, templateEngine)
 
         get("/*", this::notFound, templateEngine)
@@ -37,7 +38,7 @@ class DataController : AbstractController() {
     }
 
     fun notFound(req: Request, res: Response): ModelAndView {
-        return ResponseBuilder(req,res)
+        return ResponseBuilder(req, res)
                 .code(HttpStatus.NOT_FOUND_404)
                 .error("Route not found!")
                 .getModel()
@@ -52,7 +53,7 @@ class DataController : AbstractController() {
     }
 
 
-    fun addBook(req: Request, res: Response): ModelAndView {
+    fun postBook(req: Request, res: Response): ModelAndView {
         val idStudent = req.params("studentId")?.toIntOrNull()
         val title = req.queryParams("title")
         val author = req.queryParams("author")
@@ -121,7 +122,7 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    fun addStudent(req: Request, res: Response): ModelAndView {
+    fun postStudent(req: Request, res: Response): ModelAndView {
         val studentName = req.queryParams("name")
         val studentPhone = req.queryParams("phone")
         val studentYear = req.queryParams("year")?.toIntOrNull()
@@ -137,6 +138,33 @@ class DataController : AbstractController() {
             val response = dataService.createStudent(studentName, studentPhone, studentYear!!)
             responseBuilder
                     .code(HttpStatus.CREATED_201)
+                    .response(response.body)
+        } else
+            responseBuilder
+                    .error(result.errors)
+                    .code(HttpStatus.BAD_REQUEST_400)
+        return responseBuilder.getModel()
+    }
+
+    fun putStudent(req: Request, res: Response): ModelAndView {
+        val studentId = req.params("studentId")
+        val studentName = req.queryParams("name")
+        val studentPhone = req.queryParams("phone")
+        val studentYear = req.queryParams("year")?.toIntOrNull()
+        val responseBuilder = ResponseBuilder(req, res)
+        val result = FluentValidator.checkAll()
+                .setIsFailFast(false)
+                .on(studentId, UUIDValidator("studentId"))
+                .on(studentName, NameValidator("Name"))
+                .on(studentPhone, PhoneValidator())
+                .on(studentYear, YearValidator(1900, 2000))
+                .doValidate()
+                .result(toSimple())
+        Runner.logger.debug("studentId = $studentId")
+        if (result.isSuccess) {
+            val response = dataService.putStudent(studentId, studentName, studentPhone, studentYear!!)
+            responseBuilder
+                    .code(if (response.param == true) HttpStatus.CREATED_201 else HttpStatus.OK_200)
                     .response(response.body)
         } else
             responseBuilder
