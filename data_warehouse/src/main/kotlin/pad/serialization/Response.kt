@@ -23,7 +23,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
         private set
     var response: Any? = null
         private set
-    private val globalLinks: List<Link> = HateoasProvider.getLinks(req)
+    private val globalLinks: MutableList<Link> = HateoasProvider.getLinks(req).toMutableList()
 
     init {
         val acceptHeader = req.headers("Accept")
@@ -37,6 +37,13 @@ class ResponseBuilder(req: Request, private val res: Response) {
 
     fun header(header: Pair<String, String?>): ResponseBuilder {
         this.res.header(header.first, header.second)
+        return this
+    }
+
+    fun ignoreParam(param: String): ResponseBuilder {
+        Runner.logger.debug(" param = $param   BEFORE IGNORE: $globalLinks")
+        globalLinks.removeAll { it.hasParam(param) }
+        Runner.logger.debug("AFTER IGNORE: $globalLinks")
         return this
     }
 
@@ -81,7 +88,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
         return ModelAndView(ResponseMessage(isSuccess, error, response, if (isSuccess) globalLinks else listOf()), header.toString())
     }
 
-    private fun isSuccessCode(code : Int) : Boolean = code >= 200 && code % 100 < 4
+    private fun isSuccessCode(code: Int): Boolean = code >= 200 && code % 100 < 4
 
 
 }

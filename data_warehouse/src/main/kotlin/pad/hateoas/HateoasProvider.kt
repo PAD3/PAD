@@ -27,8 +27,8 @@ object HateoasProvider {
         val node = nodes.firstOrNull { pathInfo.matches(it.linkRegex) } ?: return listOf()
         if (restCache[node] == null)
             restCache[node] = nodes.asSequence().filter { it != node && node.params.containsAll(it.params) }.toList()
-        val links = restCache[node]?.map { Link(it.rel, makeLink(it.linkFormat, params)) }?.toMutableList() ?: return listOf()
-        links.add(Link("self", makeLink(node.linkFormat, params)))
+        val links = restCache[node]?.map { Link(it.rel, it.linkFormat, params) }?.toMutableList() ?: return listOf()
+        links.add(Link("self", node.linkFormat, params))
         println(node)
         return links
     }
@@ -36,13 +36,13 @@ object HateoasProvider {
     fun getLinks(dto: Dto, topLinks: List<Link>): List<Link> {
         val alreadyLinks = topLinks.map { it.href }
         Runner.logger.debug("already get = $topLinks ${dto.javaClass.name}")
-        val params = getParamsFromDto(dto)
+        val params = getParamsFromDto(dto).toMutableMap()
         Runner.logger.debug("params = $params")
         val node = nodes.firstOrNull { it.dtos.contains(dto::class) } ?: return listOf()
         var links = nodes.asSequence().filter { it != node && node.params.containsAll(it.params) }
-                .map { Link(it.rel, makeLink(it.linkFormat, params)) }.toMutableList()
+                .map { Link(it.rel, it.linkFormat, params) }.toMutableList()
         links = links.filter { !alreadyLinks.contains(it.href) }.toMutableList()
-        links.add(Link("self", makeLink(node.linkFormat, params)))
+        links.add(Link("self", node.linkFormat, params))
         return links
     }
 
@@ -74,13 +74,5 @@ object HateoasProvider {
         return params
     }
 
-    private fun makeLink(linkFormat: String, params: Map<String, String>): String {
-        var result: String = linkFormat.replace(":", "")
-        Runner.logger.debug("making link $linkFormat    $params")
-        for ((name, value) in params) {
-            Runner.logger.debug("replacing $name with $value")
-            result = result.replace(name.removePrefix(":"), value, ignoreCase = true)
-        }
-        return "${Runner.baseUrl}$result"
-    }
+
 }

@@ -29,6 +29,7 @@ class DataController : AbstractController() {
         get("/students/:studentId/books", this::getBooks, templateEngine)
         get("/students/:studentId/books/:bookId", this::getBook, templateEngine)
         put("/students/:studentId", this::putStudent, templateEngine)
+        delete("/students/:studentId", this::deleteStudent, templateEngine)
         post("/students", this::postStudent, templateEngine)
         post("/students/:studentId/books", this::postBook, templateEngine)
         post("/*", this::notFound, templateEngine)
@@ -122,26 +123,49 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
+    fun deleteStudent(req: Request, res: Response) : ModelAndView {
+        val studentId = req.params("studentId")
+        val responseBuilder = ResponseBuilder(req,res)
+        responseBuilder.ignoreParam("studentId")
+        val check = FluentValidator.checkAll()
+                .on(studentId,UUIDValidator("studentId"))
+                .result(toSimple())
+        if (check.isSuccess){
+            val result = dataService.deleteStudent(studentId)
+            if (result.errorMessage != null)
+                responseBuilder
+                        .code(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                        .error(result.errorMessage)
+            else
+                responseBuilder
+                        .code(HttpStatus.OK_200)
+        } else
+            responseBuilder
+                    .code(HttpStatus.BAD_REQUEST_400)
+                    .error(check.errors)
+        return responseBuilder.getModel()
+    }
+
     fun postStudent(req: Request, res: Response): ModelAndView {
         val studentName = req.queryParams("name")
         val studentPhone = req.queryParams("phone")
         val studentYear = req.queryParams("year")?.toIntOrNull()
         val responseBuilder = ResponseBuilder(req, res)
-        val result = FluentValidator.checkAll()
+        val check = FluentValidator.checkAll()
                 .setIsFailFast(false)
                 .on(studentName, NameValidator("Name"))
                 .on(studentPhone, PhoneValidator())
                 .on(studentYear, YearValidator(1900, 2000))
                 .doValidate()
                 .result(toSimple())
-        if (result.isSuccess) {
-            val response = dataService.createStudent(studentName, studentPhone, studentYear!!)
+        if (check.isSuccess) {
+            val result = dataService.createStudent(studentName, studentPhone, studentYear!!)
             responseBuilder
                     .code(HttpStatus.CREATED_201)
-                    .response(response.body)
+                    .response(result.body)
         } else
             responseBuilder
-                    .error(result.errors)
+                    .error(check.errors)
                     .code(HttpStatus.BAD_REQUEST_400)
         return responseBuilder.getModel()
     }
@@ -152,7 +176,7 @@ class DataController : AbstractController() {
         val studentPhone = req.queryParams("phone")
         val studentYear = req.queryParams("year")?.toIntOrNull()
         val responseBuilder = ResponseBuilder(req, res)
-        val result = FluentValidator.checkAll()
+        val check = FluentValidator.checkAll()
                 .setIsFailFast(false)
                 .on(studentId, UUIDValidator("studentId"))
                 .on(studentName, NameValidator("Name"))
@@ -161,14 +185,14 @@ class DataController : AbstractController() {
                 .doValidate()
                 .result(toSimple())
         Runner.logger.debug("studentId = $studentId")
-        if (result.isSuccess) {
-            val response = dataService.putStudent(studentId, studentName, studentPhone, studentYear!!)
+        if (check.isSuccess) {
+            val result = dataService.putStudent(studentId, studentName, studentPhone, studentYear!!)
             responseBuilder
-                    .code(if (response.param == true) HttpStatus.CREATED_201 else HttpStatus.OK_200)
-                    .response(response.body)
+                    .code(if (result.param == true) HttpStatus.CREATED_201 else HttpStatus.OK_200)
+                    .response(result.body)
         } else
             responseBuilder
-                    .error(result.errors)
+                    .error(check.errors)
                     .code(HttpStatus.BAD_REQUEST_400)
         return responseBuilder.getModel()
     }

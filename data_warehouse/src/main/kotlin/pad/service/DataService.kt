@@ -60,6 +60,16 @@ class DataService @Inject constructor() {
         }
     }
 
+    fun deleteStudent(id: String) : ServiceResponse<Void,Void>{
+        return try {
+            studentDao.deleteIds(listOf(id))
+            return ServiceResponse(null)
+        } catch (e : SQLException){
+            ServiceResponse(null,e.message)
+        }
+
+    }
+
     fun putStudent(id: String, name: String, phone: String, year: Int): ServiceResponse<StudentDto, Boolean> {
         var student = studentDao.queryForId(id)
         var createdNewUser = false
