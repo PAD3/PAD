@@ -7,22 +7,25 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"io/ioutil"
 	"strings"
+	"github.com/golang/gddo/httputil/header"
 )
 
 type transport struct {
 	http.RoundTripper
 }
 
-var count = 1
+var acceptableMimeTypes = [...]string{"application/json", "application/xml", "application/x-yaml"}
+var count = 0
 
 func runReverseProxy(servers []string, r *http.Request, w http.ResponseWriter) {
 	director := func(request *http.Request) {
-		copyHeaders(request.Header, &r.Header)
+		request.Header = header.Copy(r.Header)
 		request.URL.Scheme = "http"
-		request.URL.Host = "localhost:" + servers[count]
+		request.URL.Host = servers[count]
+		request.Host = servers[count]
 
 		if count++; count >= len(servers) {
-			count = 1
+			count = 0
 		}
 	}
 	proxy := &httputil.ReverseProxy{
@@ -32,17 +35,20 @@ func runReverseProxy(servers []string, r *http.Request, w http.ResponseWriter) {
 	proxy.ServeHTTP(w, r)
 }
 
-func copyHeaders(source http.Header, dest *http.Header) {
-	for n, v := range source {
-		for _, vv := range v {
-			dest.Add(n, vv)
-		}
-	}
-}
-
 func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 
 	if req.Method == http.MethodGet {
+		preferredContentType := getPreferredContentType(req)
+
+		if !isSupportedType(preferredContentType.Value) {
+			log.Printf("Not acceptable MIME type %s", preferredContentType.Value)
+			return &http.Response{
+				StatusCode: http.StatusNotAcceptable,
+				Body:       ioutil.NopCloser(strings.NewReader("")),
+			}, nil
+		}
+
+		req.Header.Set("Accept", preferredContentType.Value)
 		cachedResponse, e := r.get(req)
 		if e == redis.ErrNil {
 			log.Printf("No cache for %s in Redis", req.URL.String())
@@ -54,6 +60,27 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	return roundTrip(req, t)
+}
+
+func getPreferredContentType(req *http.Request) header.AcceptSpec {
+	specs := header.ParseAccept(req.Header, "Accept")
+	var max header.AcceptSpec
+
+	for _, spec := range specs {
+		if spec.Q > max.Q {
+			max = spec
+		}
+	}
+	return max
+}
+
+func isSupportedType(str string) bool {
+	for _, a := range acceptableMimeTypes {
+		if a == str {
+			return true
+		}
+	}
+	return false
 }
 
 func makeResponse(cachedResponse string) (resp *http.Response, err error) {

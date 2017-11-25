@@ -1,5 +1,11 @@
 {
 	"comment": "",
+	"heroku": {
+		"heroku.sync": false,
+		"install": [
+			"./src/"
+		]
+	},
 	"ignore": "test",
 	"package": [
 		{
@@ -19,6 +25,13 @@
 			"path": "github.com/garyburd/redigo/redis",
 			"revision": "47dc60e71eed504e3ef8e77ee3c6fe720f3be57f",
 			"revisionTime": "2017-11-02T21:02:05Z"
+		},
+		{
+			"checksumSHA1": "fnfP/j9KGqVN0xmZsIxTie3XUwI=",
+			"path": "github.com/golang/gddo/httputil/header",
+			"revision": "293f5da99ebf75dfe83bdc40605c1dca64a484a9",
+			"revisionTime": "2017-11-17T20:24:44Z",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
@@ -57,5 +70,5 @@
 			"revisionTime": "2017-08-14T20:04:35Z"
 		}
 	],
-	"rootPath": "PAD/proxy"
+	"rootPath": "./src"
 }

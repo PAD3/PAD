@@ -17,12 +17,13 @@ func (h *proxyHandler) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var err error
-	r, err = newRedis("redis://sylar:@localhost:6379/0")
-	handleError(err, "Could not connect to Redis")
+	conn := pool.Get()
+	r = &Redis{conn}
+	defer conn.Close()
 
-	handler := &proxyHandler{ports: os.Args}
+	nodes := []string{"padlab.herokuapp.com"}
+	handler := &proxyHandler{ports: nodes}
 	http.HandleFunc("/", handler.handle)
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
 }
