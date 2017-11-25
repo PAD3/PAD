@@ -8,7 +8,7 @@ import java.util.*
 class YearValidator constructor(val min : Int, val max : Int): ValidatorHandler<Int>(), Validator<Int> {
 
     override fun validate(context: ValidatorContext?, t: Int?): Boolean {
-        if (t == null) {
+        if (t == null || t == Int.MIN_VALUE) {
             context?.addErrorMsg("No year provided!")
             return false
         }

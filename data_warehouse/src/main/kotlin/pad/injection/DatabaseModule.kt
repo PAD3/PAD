@@ -11,6 +11,7 @@ import pad.dao.BookDao
 import pad.dao.StudentDao
 import pad.model.Book
 import pad.model.Student
+import java.net.URI
 
 import javax.inject.Singleton
 import java.sql.SQLException
@@ -21,11 +22,24 @@ class DatabaseModule {
     @Singleton
     @Provides
     fun provideConnectionSource(): ConnectionSource {
-        val databaseUrl = "jdbc:mysql://localhost:3306/pad"
+        val connectionSource : JdbcPooledConnectionSource
+        val dbUrl : String
+        val username : String
+        val password : String
+        if (System.getenv("CLEARDB_DATABASE_URL") != null){
+            val dbUri = URI(System.getenv("CLEARDB_DATABASE_URL"))
+            username = dbUri.userInfo.split(":")[0]
+            password = dbUri.userInfo.split(":")[1]
+            dbUrl = "jdbc:mysql://${dbUri.host}${dbUri.path}"
+        }else {
+            dbUrl = "jdbc:mysql://localhost:3306/pad"
+            username = "pad_user"
+            password = "i_love_pad"
+        }
         try {
-            val connectionSource = JdbcPooledConnectionSource(databaseUrl)
-            connectionSource.setUsername("pad_user")
-            connectionSource.setPassword("i_love_pad")
+            connectionSource = JdbcPooledConnectionSource(dbUrl)
+            connectionSource.setUsername(username)
+            connectionSource.setPassword(password)
             connectionSource.setCheckConnectionsEveryMillis(5000)
             connectionSource.setMaxConnectionsFree(5)
             connectionSource.initialize()

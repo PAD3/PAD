@@ -4,7 +4,8 @@ import pad.Runner
 
 enum class Format constructor(private val customName: String) {
 
-    JSON("application/json"), XML("application/xml"), YAML("application/x-yaml"), INVALID("invalid");
+    JSON("application/json"), XML("application/xml"), YAML("application/x-yaml"), INVALID("invalid"),
+    URL_FORM_ENCODED("application/x-www-form-urlencoded");
 
     override fun toString(): String = this.customName
 
@@ -16,6 +17,7 @@ enum class Format constructor(private val customName: String) {
         fun fromString(name: String?): Format = when (name) {
             XML.toString() -> XML
             YAML.toString() -> YAML
+            URL_FORM_ENCODED.toString() -> URL_FORM_ENCODED
             JSON.toString(), "application/*", null, "", "*/*" -> JSON
             else -> INVALID
         }
@@ -50,7 +52,14 @@ enum class Format constructor(private val customName: String) {
     private data class FormatVariant(val type: String, val subType: String, val q: Float) {
         override fun toString(): String = "$type/$subType"
         val hasSpecialSubType = subType != "*"
-        val mime = Format.fromString(toString())
+        val mime = parseMime("$type/$subType")
+
+        private fun parseMime(mime: String): Format {
+            val format = Format.fromString(mime)
+            return if (format !in Runner.supportedMimeTypes)
+                INVALID else
+                format
+        }
     }
 
 }

@@ -8,7 +8,7 @@ import com.baidu.unbiz.fluentvalidator.ValidatorHandler
 class NameValidator (val fieldName: String): ValidatorHandler<String>(), Validator<String> {
 
     override fun validate(context: ValidatorContext?, t: String?): Boolean {
-        if (t == null) {
+        if (t == null || t.isEmpty()) {
             context?.addErrorMsg("No $fieldName provided!")
             return false
         }

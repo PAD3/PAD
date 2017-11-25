@@ -1,8 +1,9 @@
 package pad.hateoas
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import pad.Runner
 
-data class Link(val rel: String, val linkFormat: String, private var params: Map<String, String>) {
+data class Link(val rel: String, @JsonIgnore val linkFormat: String, private var params: Map<String, String>) {
     val href: String
 
     init {

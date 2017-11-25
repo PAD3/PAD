@@ -10,6 +10,7 @@ import pad.hateoas.Hateoas
 import pad.serialization.DefaultTemplateEngine
 import pad.serialization.ResponseBuilder
 import pad.service.DataService
+import pad.util.bodyParams
 import pad.validator.*
 import spark.ModelAndView
 import spark.Request
@@ -55,11 +56,12 @@ class DataController : AbstractController() {
 
 
     fun postBook(req: Request, res: Response): ModelAndView {
+        val bodyParams = req.bodyParams()
         val idStudent = req.params("studentId")?.toIntOrNull()
-        val title = req.queryParams("title")
-        val author = req.queryParams("author")
-        val desc = req.queryParams("desc")
-        val year = req.queryParams("year")?.toIntOrNull()
+        val title = bodyParams.string("title")
+        val author = bodyParams.string("author")
+        val desc = bodyParams.string("desc")
+        val year = bodyParams.int("year")
         val responseBuilder = ResponseBuilder(req, res)
         val result = FluentValidator.checkAll()
                 .setIsFailFast(false)
@@ -147,9 +149,10 @@ class DataController : AbstractController() {
     }
 
     fun postStudent(req: Request, res: Response): ModelAndView {
-        val studentName = req.queryParams("name")
-        val studentPhone = req.queryParams("phone")
-        val studentYear = req.queryParams("year")?.toIntOrNull()
+        val bodyParams = req.bodyParams()
+        val studentName = bodyParams.string("name")
+        val studentPhone = bodyParams.string("phone")
+        val studentYear = bodyParams.int("year")
         val responseBuilder = ResponseBuilder(req, res)
         val check = FluentValidator.checkAll()
                 .setIsFailFast(false)
@@ -171,10 +174,11 @@ class DataController : AbstractController() {
     }
 
     fun putStudent(req: Request, res: Response): ModelAndView {
+        val bodyParams = req.bodyParams()
         val studentId = req.params("studentId")
-        val studentName = req.queryParams("name")
-        val studentPhone = req.queryParams("phone")
-        val studentYear = req.queryParams("year")?.toIntOrNull()
+        val studentName = bodyParams.string("name")
+        val studentPhone = bodyParams.string("phone")
+        val studentYear = bodyParams.int("year")
         val responseBuilder = ResponseBuilder(req, res)
         val check = FluentValidator.checkAll()
                 .setIsFailFast(false)
@@ -186,7 +190,7 @@ class DataController : AbstractController() {
                 .result(toSimple())
         Runner.logger.debug("studentId = $studentId")
         if (check.isSuccess) {
-            val result = dataService.putStudent(studentId, studentName, studentPhone, studentYear!!)
+            val result = dataService.putStudent(req.params("studentId"), studentName, studentPhone, studentYear!!)
             responseBuilder
                     .code(if (result.param == true) HttpStatus.CREATED_201 else HttpStatus.OK_200)
                     .response(result.body)

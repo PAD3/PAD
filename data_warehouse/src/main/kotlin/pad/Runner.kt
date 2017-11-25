@@ -5,6 +5,7 @@ import org.apache.log4j.Logger
 import pad.controller.DataController
 import pad.hateoas.HateoasProvider
 import pad.injection.DaggerMainComponent
+import pad.serialization.Format
 import spark.Spark.port
 
 
@@ -16,7 +17,8 @@ object Runner {
             .build()
 
     val logger = Logger.getLogger(Logger::class.java)
-    val baseUrl = "http://localhost:4567"
+    val baseUrl = if (System.getenv("BASE_URL") != null) System.getenv("BASE_URL") else "http://localhost:4567"
+    val supportedMimeTypes = setOf(Format.JSON, Format.XML, Format.YAML)
 
     @JvmStatic
     fun main(args: Array<String>) {

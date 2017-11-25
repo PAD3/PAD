@@ -7,7 +7,7 @@ import com.baidu.unbiz.fluentvalidator.ValidatorHandler
 class PhoneValidator : ValidatorHandler<String>(), Validator<String> {
 
     override fun validate(context: ValidatorContext?, t: String?): Boolean {
-        if (t == null) {
+        if (t == null || t.isEmpty()) {
             context?.addErrorMsg("No phone provided!")
             return false
         }

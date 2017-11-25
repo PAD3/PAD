@@ -88,7 +88,7 @@ class ResponseBuilder(req: Request, private val res: Response) {
         return ModelAndView(ResponseMessage(isSuccess, error, response, if (isSuccess) globalLinks else listOf()), header.toString())
     }
 
-    private fun isSuccessCode(code: Int): Boolean = code >= 200 && code % 100 < 4
+    private fun isSuccessCode(code: Int): Boolean = code < 400
 
 
 }
