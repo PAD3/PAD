@@ -6,46 +6,45 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 /**
- * Created by Ironman on 22.11.2017.
+ * Created by Ironman on 27.11.2017.
  */
 
-public class Response {
-
-    @SerializedName("code")
+public class BookAddResponse {
+    @SerializedName("success")
     @Expose
-    private Integer code;
+    private Boolean success;
     @SerializedName("error")
     @Expose
-    private List<String> error = null;
+    private List<Object> error = null;
     @SerializedName("payload")
     @Expose
-    private Student response;
+    private PayLoad payload = null;
     @SerializedName("links")
     @Expose
     private List<Link> links = null;
 
-    public Integer getCode() {
-        return code;
+    public Boolean getSuccess() {
+        return success;
     }
 
-    public void setCode(Integer code) {
-        this.code = code;
+    public void setSuccess(Boolean success) {
+        this.success = success;
     }
 
-    public List<String> getError() {
+    public List<Object> getError() {
         return error;
     }
 
-    public void setError(List<String> error) {
+    public void setError(List<Object> error) {
         this.error = error;
     }
 
-    public Student getResponse() {
-        return response;
+    public PayLoad getPayload() {
+        return payload;
     }
 
-    public void setResponse(Student response) {
-        this.response = response;
+    public void setPayload(PayLoad payload) {
+        this.payload = payload;
     }
 
     public List<Link> getLinks() {

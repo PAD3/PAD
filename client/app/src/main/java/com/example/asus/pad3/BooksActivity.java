@@ -33,8 +33,8 @@ public class BooksActivity extends AppCompatActivity {
         books.add(new Book("Mertvie Dusi"));
         books.add(new Book("Mertvie Dusi"));
         books.add(new Book("Mertvie Dusi"));
-        BooksAdapter categoryAdapter = new BooksAdapter(books);
+       // BooksAdapter categoryAdapter = new BooksAdapter(books);
         booksList.setLayoutManager(new LinearLayoutManager(this));
-        booksList.setAdapter(categoryAdapter);
+        //booksList.setAdapter(categoryAdapter);
     }
 }

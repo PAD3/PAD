@@ -13,7 +13,9 @@ public class Student {
     @SerializedName("name")
     @Expose
     String name;
-
+    @SerializedName("id")
+    @Expose
+    String id;
     public String getId() {
         return id;
     }
@@ -22,9 +24,6 @@ public class Student {
         this.id = id;
     }
 
-    @SerializedName("id")
-    @Expose
-    String id;
     public Student(String phone, String year, String name) {
         this.phone = phone;
         this.year = year;
@@ -37,6 +36,7 @@ public class Student {
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
     public String getYear() {
         return year;
     }

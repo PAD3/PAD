@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements StudentAdapter.It
         studentses.add(new com.example.asus.pad3.model.Student("Name:Alex", "Year:1995", "+37369487615"));
         studentses.add(new com.example.asus.pad3.model.Student("Name:Alex", "Year:1995", "+37369487615"));
         studentses.add(new com.example.asus.pad3.model.Student("Name:Alex", "Year:1995", "+37369487615"));
-        categoryAdapter = new StudentAdapter(studentses, this);
+        //categoryAdapter = new StudentAdapter(studentses, this);
         studentsList.setLayoutManager(new LinearLayoutManager(this));
         studentsList.setAdapter(categoryAdapter);
     }
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements StudentAdapter.It
                             .addInterceptor(interceptor)
                             .build();
                     retrofit = new Retrofit.Builder()
-                            .baseUrl("http://appapi.eu:4567")
+                            .baseUrl("https://padlab.herokuapp.com")
                             .addConverterFactory(GsonConverterFactory.create(gson))
                             .client(okHttpClient)
                             .build();

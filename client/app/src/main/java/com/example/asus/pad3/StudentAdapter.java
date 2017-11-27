@@ -1,25 +1,24 @@
 package com.example.asus.pad3;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.asus.pad3.model.Student;
 
 import java.util.List;
 
-/**
- * Created by ASUS on 13.11.2017.
- */
-
 public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHolder> {
     private List<Student> contactsList;
     private ItemClickChild mListener;
-
+    private FragmentCommunication mCommunicator;
+    Context context;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name;
@@ -37,9 +36,10 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
     }
 
 
-    public StudentAdapter(List<Student> contactsList, Activity activity) {
+    public StudentAdapter(List<Student> contactsList,Context activity,FragmentCommunication communication) {
         this.contactsList = contactsList;
-        mListener = (ItemClickChild) activity;
+        mCommunicator=communication;
+        context = activity;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.onChildClick(name);
+                mCommunicator.respond(position,contactsList.get(position).getId());
             }
         });
     }
