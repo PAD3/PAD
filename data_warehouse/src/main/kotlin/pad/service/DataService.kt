@@ -1,6 +1,7 @@
 package pad.service
 
 
+import com.j256.ormlite.stmt.PreparedDelete
 import pad.Runner
 import pad.dao.BookDao
 import pad.dao.StudentDao
@@ -62,8 +63,11 @@ class DataService @Inject constructor() {
 
     fun deleteStudent(id: String) : ServiceResponse<Void,Void>{
         return try {
+            val deleteBuilder = bookDao.deleteBuilder()
+            deleteBuilder.where().eq("student_id",id)
+            bookDao.delete(deleteBuilder.prepare())
             studentDao.deleteIds(listOf(id))
-            return ServiceResponse(null)
+            ServiceResponse(null)
         } catch (e : SQLException){
             ServiceResponse(null,e.message)
         }

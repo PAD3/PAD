@@ -57,7 +57,7 @@ class DataController : AbstractController() {
 
     fun postBook(req: Request, res: Response): ModelAndView {
         val bodyParams = req.bodyParams()
-        val idStudent = req.params("studentId")?.toIntOrNull()
+        val idStudent = req.params("studentId")
         val title = bodyParams.string("title")
         val author = bodyParams.string("author")
         val desc = bodyParams.string("desc")
@@ -65,7 +65,7 @@ class DataController : AbstractController() {
         val responseBuilder = ResponseBuilder(req, res)
         val result = FluentValidator.checkAll()
                 .setIsFailFast(false)
-                .on(idStudent, IdValidator("studentId"))
+                .on(idStudent, UUIDValidator("studentId"))
                 .on(title, NameValidator("Title"))
                 .on(author, NameValidator("Author"))
                 .on(desc, DescValidator())
