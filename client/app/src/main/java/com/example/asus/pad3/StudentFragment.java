@@ -53,17 +53,18 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
     RecyclerView studentsList;
     @BindView(R.id.buttonAdd)
     Button buttonAdd;
+    @BindView(R.id.progressBar)
+    View progress;
     List<Student> studentses;
     private PopupWindow mPopupWindow;
     API student;
     StudentAdapter categoryAdapter;
     private Retrofit retrofit;
     SharedPreferences sPref;
+    private Navigator navigator;
 
     private String mParam1;
     private String mParam2;
-
-    private OnFragmentInteractionListener mListener;
 
     public StudentFragment() {
         // Required empty public constructor
@@ -96,35 +97,29 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
         return v;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        try {
+            navigator = (Navigator) getActivity();
+        } catch (ClassCastException e){
+            throw new RuntimeException("Parent activity should implement Navigator!");
         }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
     @Override
-    public void onChildClick(String position) {
-
-    }
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    public void onChildClick(String studentId) {
+        BooksFragment booksFragment = new BooksFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("id",studentId);
+        booksFragment.setArguments(bundle);
+        navigator.navigate(booksFragment);
     }
 
     public void init() {
@@ -149,13 +144,16 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(okHttpClient)
                 .build();
+        categoryAdapter = new StudentAdapter(getActivity(), this);
+        studentsList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        studentsList.setAdapter(categoryAdapter);
         student = retrofit.create(API.class);
         student.getStudents().enqueue(new Callback<ReponseStudent>() {
             @Override
             public void onResponse(Call<ReponseStudent> call, retrofit2.Response<ReponseStudent> response) {
+                progress.setVisibility(View.GONE);
                 studentses.addAll(response.body().getResponse());
-                categoryAdapter = new StudentAdapter(studentses, getActivity(),communication);
-                studentsList.setLayoutManager(new LinearLayoutManager(getActivity()));
+                categoryAdapter.addItems(studentses);
                 studentsList.setAdapter(categoryAdapter);
             }
 
@@ -170,11 +168,11 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
     public void addStudent(View view) {
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(LAYOUT_INFLATER_SERVICE);
         View customView1 = inflater.inflate(R.layout.add_student, null);
-        LinearLayout mainRev = (LinearLayout) customView1.findViewById(R.id.mainRev);
-        final EditText name = (EditText) customView1.findViewById(R.id.nameEditText);
-        final EditText year = (EditText) customView1.findViewById(R.id.yearEditText);
-        final EditText phone = (EditText) customView1.findViewById(R.id.phoneEditText);
-        Button addStudentButton = (Button) customView1.findViewById(R.id.addStudentButton);
+        LinearLayout mainRev = customView1.findViewById(R.id.mainRev);
+        final EditText name = customView1.findViewById(R.id.nameEditText);
+        final EditText year = customView1.findViewById(R.id.yearEditText);
+        final EditText phone = customView1.findViewById(R.id.phoneEditText);
+        Button addStudentButton = customView1.findViewById(R.id.addStudentButton);
         final String phone1 = phone.getText().toString();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setCancelable(false)
@@ -239,16 +237,4 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
             }
         });
     }
-    FragmentCommunication communication = new FragmentCommunication() {
-        @Override
-        public void respond(int position, String id) {
-            Toast.makeText(getActivity(),id,Toast.LENGTH_SHORT).show();
-            BooksFragment booksFragment = new BooksFragment();
-            Bundle bundle = new Bundle();
-            bundle.putString("id",id);
-            booksFragment.setArguments(bundle);
-            FragmentManager fragmentManager = getFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.mainLayout,booksFragment).commit();
-        }
-    };
 }

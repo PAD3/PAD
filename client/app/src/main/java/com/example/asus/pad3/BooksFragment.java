@@ -2,9 +2,7 @@ package com.example.asus.pad3;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,14 +16,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.Toast;
 
 import com.example.asus.pad3.model.BookAddResponse;
 import com.example.asus.pad3.model.BooksResponse;
 import com.example.asus.pad3.model.PayLoad;
-import com.example.asus.pad3.model.ReponseStudent;
-import com.example.asus.pad3.model.Response;
-import com.example.asus.pad3.model.Student;
 import com.example.asus.pad3.retrofit.API;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -107,19 +101,9 @@ public class BooksFragment extends Fragment {
     }
 
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            //mListener.onFragmentInteraction(uri);
-        }
-    }
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-          //  mListener = (OnFragmentInteractionListener) context;
-        }
     }
 
     @Override
@@ -128,11 +112,6 @@ public class BooksFragment extends Fragment {
         mListener = null;
     }
 
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
 
     public void init(final String id) {
 
@@ -180,12 +159,12 @@ public class BooksFragment extends Fragment {
     public void addStudent(View view) {
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(LAYOUT_INFLATER_SERVICE);
         View customView1 = inflater.inflate(R.layout.add_book, null);
-        LinearLayout mainRev = (LinearLayout) customView1.findViewById(R.id.mainRev);
-        final EditText title = (EditText) customView1.findViewById(R.id.titleBook);
-        final EditText author = (EditText) customView1.findViewById(R.id.author);
-        final EditText desc = (EditText) customView1.findViewById(R.id.desc);
-        final EditText yearOfBook = (EditText) customView1.findViewById(R.id.yearOfBook);
-        Button addStudentButton = (Button) customView1.findViewById(R.id.addStudentButton);
+        LinearLayout mainRev = customView1.findViewById(R.id.mainRev);
+        final EditText title = customView1.findViewById(R.id.titleBook);
+        final EditText author = customView1.findViewById(R.id.author);
+        final EditText desc = customView1.findViewById(R.id.desc);
+        final EditText yearOfBook = customView1.findViewById(R.id.yearOfBook);
+        Button addStudentButton = customView1.findViewById(R.id.addStudentButton);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setCancelable(false)
                 .setView(customView1);
@@ -250,12 +229,4 @@ public class BooksFragment extends Fragment {
             }
         });
     }
-    FragmentCommunication communication = new FragmentCommunication() {
-        @Override
-        public void respond(int position, String id) {
-            Bundle bundle=new Bundle();
-            bundle.putString("id",id);
-            Toast.makeText(getActivity(),id,Toast.LENGTH_SHORT).show();
-        }
-    };
 }

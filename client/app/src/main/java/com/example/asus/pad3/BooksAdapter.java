@@ -15,7 +15,6 @@ import java.util.List;
 
 public class BooksAdapter extends RecyclerView.Adapter< BooksAdapter.ViewHolder> {
     private List<PayLoad> contactsList;
-    private FragmentCommunication mCommunicator;
     Context context;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -26,10 +25,10 @@ public class BooksAdapter extends RecyclerView.Adapter< BooksAdapter.ViewHolder>
 
         ViewHolder(View itemView) {
             super(itemView);
-            name = (TextView) itemView.findViewById(R.id.name);
-            phone = (TextView) itemView.findViewById(R.id.phone);
-            year = (TextView) itemView.findViewById(R.id.year1);
-            deleteButton = (Button)itemView.findViewById(R.id.deleteButton);
+            name = itemView.findViewById(R.id.name);
+            phone = itemView.findViewById(R.id.phone);
+            year = itemView.findViewById(R.id.year1);
+            deleteButton = itemView.findViewById(R.id.deleteButton);
         }
     }
 

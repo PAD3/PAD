@@ -12,12 +12,12 @@ import android.widget.Toast;
 
 import com.example.asus.pad3.model.Student;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHolder> {
-    private List<Student> contactsList;
-    private ItemClickChild mListener;
-    private FragmentCommunication mCommunicator;
+    private List<Student> contactsList = new ArrayList<>();
+    private ItemClickChild itemClickChild;
     Context context;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -28,23 +28,27 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
 
         ViewHolder(View itemView) {
             super(itemView);
-            name = (TextView) itemView.findViewById(R.id.name);
-            phone = (TextView) itemView.findViewById(R.id.phone);
-            year = (TextView) itemView.findViewById(R.id.year);
-            deleteButton = (Button)itemView.findViewById(R.id.deleteButton);
+            name = itemView.findViewById(R.id.name);
+            phone = itemView.findViewById(R.id.phone);
+            year = itemView.findViewById(R.id.year);
+            deleteButton = itemView.findViewById(R.id.deleteButton);
         }
     }
 
 
-    public StudentAdapter(List<Student> contactsList,Context activity,FragmentCommunication communication) {
-        this.contactsList = contactsList;
-        mCommunicator=communication;
+    public StudentAdapter(Context activity, ItemClickChild itemClickChildListener) {
+        itemClickChild = itemClickChildListener;
         context = activity;
+    }
+
+    public void addItems(List<Student> items) {
+        this.contactsList.addAll(items);
+        notifyDataSetChanged();
     }
 
     @Override
     public StudentAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                     int viewType) {
+                                                        int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_students, parent, false);
         ViewHolder vh = new ViewHolder(v);
@@ -67,7 +71,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mCommunicator.respond(position,contactsList.get(position).getId());
+                itemClickChild.onChildClick(contactsList.get(position).getId());
             }
         });
     }
@@ -77,13 +81,14 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         return contactsList.size();
     }
 
-    public interface ItemClickChild{
-        void onChildClick(String position);
+    public interface ItemClickChild {
+        void onChildClick(String studentId);
     }
+
     public void removeAt(int position) {
 
         contactsList.remove(position);
         notifyItemRemoved(position);
-        notifyItemRangeChanged(position,  contactsList.size());
+        notifyItemRangeChanged(position, contactsList.size());
     }
 }
