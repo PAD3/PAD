@@ -1,22 +1,18 @@
 package pad.service
 
 
-import com.j256.ormlite.stmt.PreparedDelete
 import pad.Runner
 import pad.dao.BookDao
 import pad.dao.StudentDao
 import pad.dto.BookDto
 import pad.dto.StudentDto
-import pad.hateoas.HateoasProvider
 import pad.model.Book
 import pad.model.ServiceResponse
 import pad.model.Student
 import pad.util.UIDUtil
-import spark.Spark.halt
+import java.sql.SQLException
 import javax.inject.Inject
 import javax.inject.Singleton
-import java.sql.SQLException
-import java.util.ArrayList
 
 @Singleton
 class DataService @Inject constructor() {
@@ -71,7 +67,17 @@ class DataService @Inject constructor() {
         } catch (e : SQLException){
             ServiceResponse(null,e.message)
         }
+    }
 
+    fun deleteBook(id: String, studentId : String) : ServiceResponse<Void,Void>{
+        return try {
+            val deleteBuilder = bookDao.deleteBuilder()
+            deleteBuilder.where().eq("student_id",studentId).and().eq("id",id)
+            bookDao.delete(deleteBuilder.prepare())
+            ServiceResponse(null)
+        } catch (e : SQLException){
+            ServiceResponse(null,e.message)
+        }
     }
 
     fun putStudent(id: String, name: String, phone: String, year: Int): ServiceResponse<StudentDto, Boolean> {

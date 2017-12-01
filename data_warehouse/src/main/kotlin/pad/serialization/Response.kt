@@ -85,7 +85,9 @@ class ResponseBuilder(req: Request, private val res: Response) {
             halt(HttpStatus.NO_CONTENT_204)
         if (code == HttpStatus.CREATED_201)
             res.header("Location", (response as Dto).links.firstOrNull { it.rel == "self" }?.href)
-        return ModelAndView(ResponseMessage(isSuccess, error, response, if (isSuccess) globalLinks else listOf()), header.toString())
+        val model = ModelAndView(ResponseMessage(isSuccess, error, response, if (isSuccess) globalLinks else listOf()), header.toString())
+        Runner.logger.error("MODEL = "+model.model)
+        return model
     }
 
     private fun isSuccessCode(code: Int): Boolean = code < 400

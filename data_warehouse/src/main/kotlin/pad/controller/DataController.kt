@@ -31,10 +31,10 @@ class DataController : AbstractController() {
         get("/students/:studentId/books/:bookId", this::getBook, templateEngine)
         put("/students/:studentId", this::putStudent, templateEngine)
         delete("/students/:studentId", this::deleteStudent, templateEngine)
+        delete("/students/:studentId/books/:bookId", this::deleteBook, templateEngine)
         post("/students", this::postStudent, templateEngine)
         post("/students/:studentId/books", this::postBook, templateEngine)
         post("/*", this::notFound, templateEngine)
-
         get("/*", this::notFound, templateEngine)
         put("/*", this::notFound, templateEngine)
     }
@@ -53,6 +53,9 @@ class DataController : AbstractController() {
         responseBuilder.response(response)
         return responseBuilder.getModel()
     }
+
+
+
 
 
     fun postBook(req: Request, res: Response): ModelAndView {
@@ -134,6 +137,31 @@ class DataController : AbstractController() {
                 .result(toSimple())
         if (check.isSuccess){
             val result = dataService.deleteStudent(studentId)
+            if (result.errorMessage != null)
+                responseBuilder
+                        .code(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                        .error(result.errorMessage)
+            else
+                responseBuilder
+                        .code(HttpStatus.OK_200)
+        } else
+            responseBuilder
+                    .code(HttpStatus.BAD_REQUEST_400)
+                    .error(check.errors)
+        return responseBuilder.getModel()
+    }
+
+    fun deleteBook(req: Request, res: Response) : ModelAndView {
+        val studentId = req.params("studentId")
+        val bookId = req.params("bookId")
+        val responseBuilder = ResponseBuilder(req,res)
+        responseBuilder.ignoreParam("bookId")
+        val check = FluentValidator.checkAll()
+                .on(studentId,UUIDValidator("studentId"))
+                .on(bookId,UUIDValidator("bookId"))
+                .result(toSimple())
+        if (check.isSuccess){
+            val result = dataService.deleteBook(bookId,studentId)
             if (result.errorMessage != null)
                 responseBuilder
                         .code(HttpStatus.INTERNAL_SERVER_ERROR_500)
