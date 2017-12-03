@@ -29,4 +29,11 @@ public interface API {
 
     @GET("/students/{studentId}/books")
     Call<BooksResponse> getBooks(@Path("studentId") String studentId);
+
+    @DELETE("/students/{id}")
+    Call<BookAddResponse> deleteStudent(@Path("id") String id);
+
+    @DELETE("/students/{studentId}/books/{bookId}")
+    Call<BookAddResponse> deleteBook(@Path("studentId") String id,@Path("bookId") String bookId);
+
 }

@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.Toast;
 
 import com.example.asus.pad3.model.BookAddResponse;
 import com.example.asus.pad3.model.BooksResponse;
@@ -37,12 +38,13 @@ import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 
-public class BooksFragment extends Fragment {
+public class BooksFragment extends Fragment implements BooksAdapter.ItemClickChildDelete{
     private static final String ARG_PARAM1 = "id";
     private static final String ARG_PARAM2 = "param2";
     @BindView(R.id.students_recycler_view)
@@ -53,6 +55,8 @@ public class BooksFragment extends Fragment {
     private PopupWindow mPopupWindow;
     API student;
     String id = "";
+    @BindView(R.id.progressBar)
+    View progress;
     BooksAdapter categoryAdapter;
     private Retrofit retrofit;
 
@@ -81,7 +85,6 @@ public class BooksFragment extends Fragment {
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
-            Log.d("Param",mParam1);
         }
     }
 
@@ -114,7 +117,6 @@ public class BooksFragment extends Fragment {
 
 
     public void init(final String id) {
-
         studentses = new ArrayList<>();
         Gson gson = new GsonBuilder()
                 .setLenient()
@@ -137,26 +139,28 @@ public class BooksFragment extends Fragment {
                 .client(okHttpClient)
                 .build();
         student = retrofit.create(API.class);
-
+        categoryAdapter = new BooksAdapter(this);
+        studentsList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        studentsList.setAdapter(categoryAdapter);
         student.getBooks(id).enqueue(new Callback<BooksResponse>() {
             @Override
             public void onResponse(Call<BooksResponse> call, retrofit2.Response<BooksResponse> response) {
+                progress.setVisibility(View.GONE);
                 studentses.addAll(response.body().getPayload());
-                categoryAdapter = new BooksAdapter(studentses);
-                studentsList.setLayoutManager(new LinearLayoutManager(getActivity()));
+                categoryAdapter.addItems(studentses);
                 studentsList.setAdapter(categoryAdapter);
-
             }
 
             @Override
             public void onFailure(Call<BooksResponse> call, Throwable t) {
-
+                progress.setVisibility(View.GONE);
             }
         });
     }
 
     @OnClick(R.id.buttonAdd)
     public void addStudent(View view) {
+        progress.setVisibility(View.VISIBLE);
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(LAYOUT_INFLATER_SERVICE);
         View customView1 = inflater.inflate(R.layout.add_book, null);
         LinearLayout mainRev = customView1.findViewById(R.id.mainRev);
@@ -166,8 +170,7 @@ public class BooksFragment extends Fragment {
         final EditText yearOfBook = customView1.findViewById(R.id.yearOfBook);
         Button addStudentButton = customView1.findViewById(R.id.addStudentButton);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setCancelable(false)
-                .setView(customView1);
+        builder.setView(customView1);
         final AlertDialog alert = builder.create();
         alert.show();
         addStudentButton.setOnClickListener(new View.OnClickListener() {
@@ -211,9 +214,16 @@ public class BooksFragment extends Fragment {
                     student.createBook(id,yearOfBook.getText().toString(),title.getText().toString(),author.getText().toString(),desc.getText().toString()).enqueue(new Callback<BookAddResponse>() {
                         @Override
                         public void onResponse(Call<BookAddResponse> call, retrofit2.Response<BookAddResponse> response) {
-                            studentses.add(new PayLoad(response.body().getPayload().getTitle()
-                            ,response.body().getPayload().getAuthor(),response.body().getPayload().getYear(),response.body().getPayload().getDesc()));
-                            categoryAdapter.notifyDataSetChanged();
+                            if(response.body().getPayload()!=null) {
+                                progress.setVisibility(View.GONE);
+                                studentses.add(new PayLoad(response.body().getPayload().getTitle()
+                                        , response.body().getPayload().getAuthor(), response.body().getPayload().getYear(), response.body().getPayload().getDesc()));
+                                categoryAdapter.swap(studentses);
+                                alert.dismiss();
+                            }else {
+                                Toast.makeText(getActivity(),"Validate not correct",Toast.LENGTH_SHORT).show();
+                                progress.setVisibility(View.GONE);
+                            }
                         }
 
                         @Override
@@ -222,9 +232,48 @@ public class BooksFragment extends Fragment {
                         }
                     });
 
-
-                    alert.dismiss();
                 }
+
+            }
+        });
+    }
+
+    @Override
+    public void onChildClickDelete(String bookId) {
+        deleteStudent(bookId);
+    }
+
+    public void deleteStudent(String bookid) {
+        progress.setVisibility(View.VISIBLE);
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
+                        Request request = chain.request().newBuilder().addHeader("Accept", "application/json").build();
+                        return chain.proceed(request);
+                    }
+                })
+                .addInterceptor(interceptor)
+                .build();
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://padlab.herokuapp.com")
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(okHttpClient)
+                .build();
+        student = retrofit.create(API.class);
+        student.deleteBook(id,bookid).enqueue(new Callback<BookAddResponse>() {
+            @Override
+            public void onResponse(Call<BookAddResponse> call, Response<BookAddResponse> response) {
+                progress.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onFailure(Call<BookAddResponse> call, Throwable t) {
 
             }
         });

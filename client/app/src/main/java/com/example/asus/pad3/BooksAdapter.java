@@ -11,11 +11,14 @@ import android.widget.TextView;
 import com.example.asus.pad3.model.Book;
 import com.example.asus.pad3.model.PayLoad;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.http.Path;
+
 public class BooksAdapter extends RecyclerView.Adapter< BooksAdapter.ViewHolder> {
-    private List<PayLoad> contactsList;
-    Context context;
+    private List<PayLoad> contactsList = new ArrayList<>();
+    private ItemClickChildDelete itemClickChildDelete;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name;
@@ -27,14 +30,14 @@ public class BooksAdapter extends RecyclerView.Adapter< BooksAdapter.ViewHolder>
             super(itemView);
             name = itemView.findViewById(R.id.name);
             phone = itemView.findViewById(R.id.phone);
-            year = itemView.findViewById(R.id.year1);
+            year = itemView.findViewById(R.id.yearOfBook);
             deleteButton = itemView.findViewById(R.id.deleteButton);
         }
     }
 
 
-    public  BooksAdapter(List<PayLoad> contactsList) {
-        this.contactsList = contactsList;
+    public  BooksAdapter(ItemClickChildDelete itemClickChildDeleteListner) {
+        itemClickChildDelete = itemClickChildDeleteListner;
     }
 
     @Override
@@ -48,14 +51,14 @@ public class BooksAdapter extends RecyclerView.Adapter< BooksAdapter.ViewHolder>
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        holder.name.setText(contactsList.get(position).getTitle() + contactsList.get(position).getAuthor() + String.valueOf(contactsList.get(position).getYear()));
+        holder.name.setText(contactsList.get(position).getTitle() + contactsList.get(position).getAuthor());
         holder.phone.setText(contactsList.get(position).getDesc());
-     //   holder.year.setText(contactsList.get(position).getYear());
+        holder.year.setText(String.valueOf(contactsList.get(position).getYear()));
         holder.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int newPosition = holder.getAdapterPosition();
-                removeAt(newPosition);
+                removeAt(newPosition,contactsList.get(position).getId());
             }
         });
 
@@ -66,16 +69,35 @@ public class BooksAdapter extends RecyclerView.Adapter< BooksAdapter.ViewHolder>
             }
         });
     }
+    public void addItems(List<PayLoad> items) {
+        this.contactsList.addAll(items);
+        notifyDataSetChanged();
+    }
 
     @Override
     public int getItemCount() {
         return contactsList.size();
     }
 
-    public void removeAt(int position) {
 
+    public interface ItemClickChildDelete {
+        void onChildClickDelete(String studentId);
+    }
+
+    public void removeAt(int position,String id){
         contactsList.remove(position);
         notifyItemRemoved(position);
-        notifyItemRangeChanged(position,  contactsList.size());
+        itemClickChildDelete.onChildClickDelete(id);
+        notifyItemRangeChanged(position, contactsList.size());
+    }
+
+    public void swap(List<PayLoad> datas)
+    {
+        if(datas == null || datas.size()==0)
+            return;
+        if (contactsList != null && contactsList.size()>0)
+            contactsList.clear();
+        contactsList.addAll(datas);
+        notifyDataSetChanged();
     }
 }

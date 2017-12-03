@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 
+import com.example.asus.pad3.model.BookAddResponse;
 import com.example.asus.pad3.model.ReponseStudent;
 import com.example.asus.pad3.model.Response;
 import com.example.asus.pad3.model.Student;
@@ -46,7 +47,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 
-public class StudentFragment extends Fragment  implements StudentAdapter.ItemClickChild {
+public class StudentFragment extends Fragment  implements StudentAdapter.ItemClickChild ,StudentAdapter.ItemClickChildDelete{
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     @BindView(R.id.students_recycler_view)
@@ -144,17 +145,19 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(okHttpClient)
                 .build();
-        categoryAdapter = new StudentAdapter(getActivity(), this);
+        categoryAdapter = new StudentAdapter(getActivity(), this,this);
         studentsList.setLayoutManager(new LinearLayoutManager(getActivity()));
         studentsList.setAdapter(categoryAdapter);
         student = retrofit.create(API.class);
         student.getStudents().enqueue(new Callback<ReponseStudent>() {
             @Override
             public void onResponse(Call<ReponseStudent> call, retrofit2.Response<ReponseStudent> response) {
-                progress.setVisibility(View.GONE);
-                studentses.addAll(response.body().getResponse());
-                categoryAdapter.addItems(studentses);
-                studentsList.setAdapter(categoryAdapter);
+                if(response.body()!=null) {
+                    progress.setVisibility(View.GONE);
+                    studentses.addAll(response.body().getResponse());
+                    categoryAdapter.addItems(studentses);
+                    studentsList.setAdapter(categoryAdapter);
+                }
             }
 
             @Override
@@ -166,6 +169,7 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
 
     @OnClick(R.id.buttonAdd)
     public void addStudent(View view) {
+        progress.setVisibility(View.VISIBLE);
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(LAYOUT_INFLATER_SERVICE);
         View customView1 = inflater.inflate(R.layout.add_student, null);
         LinearLayout mainRev = customView1.findViewById(R.id.mainRev);
@@ -175,8 +179,7 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
         Button addStudentButton = customView1.findViewById(R.id.addStudentButton);
         final String phone1 = phone.getText().toString();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setCancelable(false)
-                .setView(customView1);
+        builder.setView(customView1);
         final AlertDialog alert = builder.create();
         alert.show();
         addStudentButton.setOnClickListener(new View.OnClickListener() {
@@ -220,9 +223,16 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
                     student.createNewStudent(name.getText().toString(), year.getText().toString(), phone.getText().toString()).enqueue(new Callback<Response>() {
                         @Override
                         public void onResponse(Call<Response> call, retrofit2.Response<Response> response) {
-                            Log.d("response", response.body().getResponse().getName());
-                            studentses.add(new Student(response.body().getResponse().getPhone(),response.body().getResponse().getYear(),response.body().getResponse().getName()));
-                            categoryAdapter.notifyDataSetChanged();
+                            if(response.body()!=null) {
+                                progress.setVisibility(View.GONE);
+                                studentses.add(new Student(response.body().getResponse().getPhone(), response.body().getResponse().getYear(), response.body().getResponse().getName()));
+                                categoryAdapter.swap(studentses);
+                                alert.dismiss();
+                            }
+                            else {
+                                Toast.makeText(getActivity(),"Validate not correct",Toast.LENGTH_SHORT).show();
+                                progress.setVisibility(View.GONE);
+                            }
                         }
 
                         @Override
@@ -231,8 +241,49 @@ public class StudentFragment extends Fragment  implements StudentAdapter.ItemCli
                         }
                     });
 
-                    alert.dismiss();
+
                 }
+
+            }
+        });
+    }
+    @Override
+    public void onChildClickDelete(String studentId) {
+               deleteStudent(studentId);
+    }
+
+    public void deleteStudent(String id) {
+        progress.setVisibility(View.VISIBLE);
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
+                        Request request = chain.request().newBuilder().addHeader("Accept", "application/json").build();
+                        return chain.proceed(request);
+                    }
+                })
+                .addInterceptor(interceptor)
+                .build();
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://padlab.herokuapp.com")
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(okHttpClient)
+                .build();
+        student = retrofit.create(API.class);
+        student.deleteStudent(id).enqueue(new Callback<BookAddResponse>() {
+            @Override
+            public void onResponse(Call<BookAddResponse> call, retrofit2.Response<BookAddResponse> response) {
+                Toast.makeText(getActivity(),"id delete succes",Toast.LENGTH_SHORT).show();
+                progress.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onFailure(Call<BookAddResponse> call, Throwable t) {
 
             }
         });

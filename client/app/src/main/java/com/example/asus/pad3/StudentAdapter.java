@@ -18,6 +18,7 @@ import java.util.List;
 public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHolder> {
     private List<Student> contactsList = new ArrayList<>();
     private ItemClickChild itemClickChild;
+    private ItemClickChildDelete itemClickChildDelete;
     Context context;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -36,8 +37,9 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
     }
 
 
-    public StudentAdapter(Context activity, ItemClickChild itemClickChildListener) {
+    public StudentAdapter(Context activity, ItemClickChild itemClickChildListener,ItemClickChildDelete itemClickChildDeleteListner) {
         itemClickChild = itemClickChildListener;
+        itemClickChildDelete = itemClickChildDeleteListner;
         context = activity;
     }
 
@@ -64,7 +66,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
             @Override
             public void onClick(View v) {
                 int newPosition = holder.getAdapterPosition();
-                removeAt(newPosition);
+                removeAt(newPosition,contactsList.get(position).getId());
             }
         });
         final String name = contactsList.get(position).getName();
@@ -85,10 +87,23 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         void onChildClick(String studentId);
     }
 
-    public void removeAt(int position) {
+    public interface ItemClickChildDelete {
+        void onChildClickDelete(String studentId);
+    }
 
+    public void removeAt(int position,String id){
         contactsList.remove(position);
         notifyItemRemoved(position);
+        itemClickChildDelete.onChildClickDelete(id);
         notifyItemRangeChanged(position, contactsList.size());
+    }
+    public void swap(List<Student> datas)
+    {
+        if(datas == null || datas.size()==0)
+            return;
+        if (contactsList != null && contactsList.size()>0)
+            contactsList.clear();
+        contactsList.addAll(datas);
+        notifyDataSetChanged();
     }
 }
