@@ -34,13 +34,27 @@ class DataService @Inject constructor() {
         }
     }
 
-    fun getStudents(): ServiceResponse<List<StudentDto>, Unit> {
+    fun getStudents(offset: Int, limit: Int): ServiceResponse<List<StudentDto>, Unit> {
         try {
-            return ServiceResponse(studentDao.queryForAll().map { StudentDto(it) })
+            return ServiceResponse(studentDao.queryBuilder().limit(limit).offset(offset).query().map { StudentDto(it) })
         } catch (e: SQLException) {
             return ServiceResponse(null, e.message)
         }
+    }
 
+    fun searchStudents(q: String, offset: Int, limit: Int): ServiceResponse<List<StudentDto>, Unit> {
+        return try {
+            ServiceResponse(studentDao
+                    .queryBuilder()
+                    .limit(limit)
+                    .offset(offset)
+                    .where()
+                    .like("name", "%$q%")
+                    .query()
+                    .map { StudentDto(it) })
+        } catch (e: SQLException) {
+            ServiceResponse(null, e.message)
+        }
     }
 
     fun createStudent(name: String, phone: String, year: Int): ServiceResponse<StudentDto, Unit> {
@@ -57,26 +71,26 @@ class DataService @Inject constructor() {
         }
     }
 
-    fun deleteStudent(id: String) : ServiceResponse<Void,Void>{
+    fun deleteStudent(id: String): ServiceResponse<Void, Void> {
         return try {
             val deleteBuilder = bookDao.deleteBuilder()
-            deleteBuilder.where().eq("student_id",id)
+            deleteBuilder.where().eq("student_id", id)
             bookDao.delete(deleteBuilder.prepare())
             studentDao.deleteIds(listOf(id))
             ServiceResponse(null)
-        } catch (e : SQLException){
-            ServiceResponse(null,e.message)
+        } catch (e: SQLException) {
+            ServiceResponse(null, e.message)
         }
     }
 
-    fun deleteBook(id: String, studentId : String) : ServiceResponse<Void,Void>{
+    fun deleteBook(id: String, studentId: String): ServiceResponse<Void, Void> {
         return try {
             val deleteBuilder = bookDao.deleteBuilder()
-            deleteBuilder.where().eq("student_id",studentId).and().eq("id",id)
+            deleteBuilder.where().eq("student_id", studentId).and().eq("id", id)
             bookDao.delete(deleteBuilder.prepare())
             ServiceResponse(null)
-        } catch (e : SQLException){
-            ServiceResponse(null,e.message)
+        } catch (e: SQLException) {
+            ServiceResponse(null, e.message)
         }
     }
 

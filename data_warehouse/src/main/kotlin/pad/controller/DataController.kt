@@ -7,6 +7,7 @@ import pad.Runner
 import pad.dto.BookDto
 import pad.dto.StudentDto
 import pad.hateoas.Hateoas
+import pad.model.ServiceResponse
 import pad.serialization.DefaultTemplateEngine
 import pad.serialization.ResponseBuilder
 import pad.service.DataService
@@ -21,6 +22,12 @@ import javax.inject.Inject
 class DataController : AbstractController() {
     @Inject
     lateinit var dataService: DataService
+
+    companion object {
+        const val DEFAULT_OFFSET: Int = 0
+        const val DEFAULT_LIMIT: Int = 25
+        const val MAX_LIMIT = 10000
+    }
 
     override fun init() {
         Runner.mainComponent.inject(this)
@@ -55,9 +62,6 @@ class DataController : AbstractController() {
     }
 
 
-
-
-
     fun postBook(req: Request, res: Response): ModelAndView {
         val bodyParams = req.bodyParams()
         val idStudent = req.params("studentId")
@@ -72,7 +76,7 @@ class DataController : AbstractController() {
                 .on(title, NameValidator("Title"))
                 .on(author, NameValidator("Author"))
                 .on(desc, DescValidator())
-                .on(year, YearValidator(1000, 2017))
+                .on(year, IntValidator(1000, 2017))
                 .doValidate()
                 .result(toSimple())
         if (result.isSuccess) {
@@ -94,7 +98,7 @@ class DataController : AbstractController() {
     }
 
     @Hateoas(rel = "students.books.get", linkFormat = "/students/:studentId/books/:bookId",
-            rootForDto = arrayOf(BookDto::class))
+            rootForDto = [(BookDto::class)])
     fun getBook(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getBook(req.params("studentId"), req.params("bookId"))
@@ -110,13 +114,27 @@ class DataController : AbstractController() {
     @Hateoas(rel = "students.list", linkFormat = "/students")
     fun getStudents(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
-        val response = dataService.getStudents()
+        var q = req.queryParams("q")
+        if (!NameValidator("query").validate(null, q))
+            q = null
+        var offset = req.queryParams("offset")?.toIntOrNull() ?: DEFAULT_OFFSET
+        var limit = req.queryParams("limit")?.toIntOrNull() ?: DEFAULT_LIMIT
+        val response: ServiceResponse<List<StudentDto>, Unit>
+        if (!IntValidator(0, Int.MAX_VALUE).validate(null, offset))
+            offset = DEFAULT_OFFSET
+        if (!IntValidator(0, MAX_LIMIT).validate(null, limit))
+            limit = DEFAULT_LIMIT
+        response = if (q == null)
+            dataService.getStudents(offset,limit)
+        else {
+            dataService.searchStudents(q, offset, limit)
+        }
         responseBuilder.response(response.body)
         return responseBuilder.getModel()
     }
 
     @Hateoas(rel = "students.get", linkFormat = "/students/:studentId",
-            rootForDto = arrayOf(StudentDto::class))
+            rootForDto = [(StudentDto::class)])
     fun getStudent(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
         val response = dataService.getStudent(req.params("studentId"))
@@ -128,14 +146,14 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    fun deleteStudent(req: Request, res: Response) : ModelAndView {
+    fun deleteStudent(req: Request, res: Response): ModelAndView {
         val studentId = req.params("studentId")
-        val responseBuilder = ResponseBuilder(req,res)
+        val responseBuilder = ResponseBuilder(req, res)
         responseBuilder.ignoreParam("studentId")
         val check = FluentValidator.checkAll()
-                .on(studentId,UUIDValidator("studentId"))
+                .on(studentId, UUIDValidator("studentId"))
                 .result(toSimple())
-        if (check.isSuccess){
+        if (check.isSuccess) {
             val result = dataService.deleteStudent(studentId)
             if (result.errorMessage != null)
                 responseBuilder
@@ -151,17 +169,17 @@ class DataController : AbstractController() {
         return responseBuilder.getModel()
     }
 
-    fun deleteBook(req: Request, res: Response) : ModelAndView {
+    fun deleteBook(req: Request, res: Response): ModelAndView {
         val studentId = req.params("studentId")
         val bookId = req.params("bookId")
-        val responseBuilder = ResponseBuilder(req,res)
+        val responseBuilder = ResponseBuilder(req, res)
         responseBuilder.ignoreParam("bookId")
         val check = FluentValidator.checkAll()
-                .on(studentId,UUIDValidator("studentId"))
-                .on(bookId,UUIDValidator("bookId"))
+                .on(studentId, UUIDValidator("studentId"))
+                .on(bookId, UUIDValidator("bookId"))
                 .result(toSimple())
-        if (check.isSuccess){
-            val result = dataService.deleteBook(bookId,studentId)
+        if (check.isSuccess) {
+            val result = dataService.deleteBook(bookId, studentId)
             if (result.errorMessage != null)
                 responseBuilder
                         .code(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -186,7 +204,7 @@ class DataController : AbstractController() {
                 .setIsFailFast(false)
                 .on(studentName, NameValidator("Name"))
                 .on(studentPhone, PhoneValidator())
-                .on(studentYear, YearValidator(1900, 2000))
+                .on(studentYear, IntValidator(1900, 2000))
                 .doValidate()
                 .result(toSimple())
         if (check.isSuccess) {
@@ -213,7 +231,7 @@ class DataController : AbstractController() {
                 .on(studentId, UUIDValidator("studentId"))
                 .on(studentName, NameValidator("Name"))
                 .on(studentPhone, PhoneValidator())
-                .on(studentYear, YearValidator(1900, 2000))
+                .on(studentYear, IntValidator(1900, 2000))
                 .doValidate()
                 .result(toSimple())
         Runner.logger.debug("studentId = $studentId")
