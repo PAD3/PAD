@@ -40,7 +40,9 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	if req.Method == http.MethodGet {
 		preferredContentType := getPreferredContentType(req)
 
-		if !isSupportedType(preferredContentType.Value) {
+		if len(req.Header.Get("Accept")) == 0 || req.Header.Get("Accept") == "*/*" {
+			req.Header.Set("Accept", "application/json")
+		} else if !isSupportedType(preferredContentType.Value) {
 			log.Printf("Not acceptable MIME type %s", preferredContentType.Value)
 			return &http.Response{
 				StatusCode: http.StatusNotAcceptable,
@@ -57,6 +59,18 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 		log.Println("Using cache " + cachedResponse)
 		return makeResponse(cachedResponse)
+	} else if req.Method == "PURGE" {
+		log.Println("Purge")
+		for _, element := range acceptableMimeTypes {
+			r.conn.Do("DEL", req.URL.Path+req.URL.RawQuery+element)
+		}
+
+		response := &http.Response{
+			StatusCode: http.StatusResetContent,
+			Body:       ioutil.NopCloser(strings.NewReader("")),
+
+		}
+		return response, nil
 	}
 
 	return roundTrip(req, t)

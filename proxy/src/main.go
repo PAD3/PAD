@@ -21,7 +21,7 @@ func main() {
 	r = &Redis{conn}
 	defer conn.Close()
 
-	nodes := []string{"padlab.herokuapp.com"}
+	nodes := []string{"padlab.herokuapp.com", "padlab2.herokuapp.com"}
 	handler := &proxyHandler{ports: nodes}
 	http.HandleFunc("/", handler.handle)
 
