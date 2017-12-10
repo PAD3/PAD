@@ -11,7 +11,9 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface API {
     @FormUrlEncoded
@@ -23,9 +25,8 @@ public interface API {
     @POST("/students/{studentId}/books")
     Call<BookAddResponse> createBook(@Path("studentId") String name, @Field("year") String year,
                                      @Field("title") String title, @Field("author") String author, @Field("desc") String desc );
-
     @GET("/students")
-    Call<ReponseStudent> getStudents();
+    Call<ReponseStudent> getStudents(@Query("q") String query, @Query("offset") int offset, @Query("limit") int limit );
 
     @GET("/students/{studentId}/books")
     Call<BooksResponse> getBooks(@Path("studentId") String studentId);
@@ -35,5 +36,10 @@ public interface API {
 
     @DELETE("/students/{studentId}/books/{bookId}")
     Call<BookAddResponse> deleteBook(@Path("studentId") String id,@Path("bookId") String bookId);
+
+    @FormUrlEncoded
+    @PUT("/students/{id}")
+    Call<Response> changeStudent(@Path("id") String nam,@Field("name") String name, @Field("year") String year,
+                                 @Field("phone") String phone);
 
 }

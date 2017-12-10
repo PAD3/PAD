@@ -7,6 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +21,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
     private List<Student> contactsList = new ArrayList<>();
     private ItemClickChild itemClickChild;
     private ItemClickChildDelete itemClickChildDelete;
+    private ItemClickChildChange itemClickChildChange;
     Context context;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -26,21 +29,28 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         TextView phone;
         TextView year;
         Button deleteButton;
+        CheckBox checkBox;
+        Button editButton;
 
         ViewHolder(View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.name);
+            checkBox = itemView.findViewById(R.id.checkBox);
             phone = itemView.findViewById(R.id.phone);
             year = itemView.findViewById(R.id.year);
             deleteButton = itemView.findViewById(R.id.deleteButton);
+            editButton = itemView.findViewById(R.id.buttonEditt);
         }
     }
 
 
-    public StudentAdapter(Context activity, ItemClickChild itemClickChildListener,ItemClickChildDelete itemClickChildDeleteListner) {
+    public StudentAdapter(Context activity, ItemClickChild itemClickChildListener,ItemClickChildDelete itemClickChildDeleteListner,
+                          ItemClickChildChange itemClickChildChange) {
         itemClickChild = itemClickChildListener;
         itemClickChildDelete = itemClickChildDeleteListner;
+        this.itemClickChildChange = itemClickChildChange;
         context = activity;
+
     }
 
     public void addItems(List<Student> items) {
@@ -62,6 +72,21 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         holder.name.setText(contactsList.get(position).getName());
         holder.phone.setText(contactsList.get(position).getPhone());
         holder.year.setText(contactsList.get(position).getYear());
+        holder.editButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if(isChecked) {
+                            itemClickChildChange.onChildClickChange(contactsList.get(position).getId(),position);
+                            notifyItemRangeChanged(position, contactsList.size());
+                            Toast.makeText(context,contactsList.get(position).getId(),Toast.LENGTH_SHORT).show();
+                        }}
+                });
+            }
+        });
+
         holder.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,6 +114,10 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
 
     public interface ItemClickChildDelete {
         void onChildClickDelete(String studentId);
+    }
+
+    public interface ItemClickChildChange {
+        void onChildClickChange(String studentId,int posit);
     }
 
     public void removeAt(int position,String id){

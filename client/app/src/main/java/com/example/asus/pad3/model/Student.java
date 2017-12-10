@@ -16,19 +16,41 @@ public class Student {
     @SerializedName("id")
     @Expose
     String id;
+
+
+    public String type;
+
     public String getId() {
         return id;
     }
+
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public Student(String phone, String year, String name) {
+    public Student(String phone, String year, String name, String id) {
         this.phone = phone;
         this.year = year;
         this.name = name;
+        this.id = id;
     }
+
+    public Student(String type) {
+        this.type = type;
+    }
+    public Student() {
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+
     public String getPhone() {
         return phone;
     }
