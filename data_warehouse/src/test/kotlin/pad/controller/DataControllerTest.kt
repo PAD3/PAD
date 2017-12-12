@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import pad.hateoas.HateoasProvider
 import pad.serialization.Format
+import pad.cache.CacheValidator
+import pad.service.SearchHandler
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DataControllerTest {
@@ -13,6 +15,18 @@ internal class DataControllerTest {
     @AfterAll()
     fun teardown() {
 
+    }
+
+    @Test
+    fun testPURGE() {
+        CacheValidator.invalidate("/students")
+    }
+
+    @Test
+    fun testSearch(){
+        val handler = SearchHandler()
+        val result = handler.parseCriteria("avg_student")
+        println(result)
     }
 
     @Test

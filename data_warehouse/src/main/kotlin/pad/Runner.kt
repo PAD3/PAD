@@ -18,6 +18,7 @@ object Runner {
 
     val logger = Logger.getLogger(Logger::class.java)
     val baseUrl = if (System.getenv("BASE_URL") != null) System.getenv("BASE_URL") else "http://localhost:4567"
+    val proxyHost = if (System.getenv("PROXY_HOST") != null) System.getenv("PROXY_HOST") else "localhost:4567"
     val supportedMimeTypes = setOf(Format.JSON, Format.XML, Format.YAML)
 
     @JvmStatic

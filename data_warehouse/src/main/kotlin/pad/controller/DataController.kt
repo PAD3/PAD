@@ -11,7 +11,10 @@ import pad.model.ServiceResponse
 import pad.serialization.DefaultTemplateEngine
 import pad.serialization.ResponseBuilder
 import pad.service.DataService
+import pad.cache.CacheValidator
 import pad.util.bodyParams
+import pad.util.hasSearchParams
+import pad.util.searchParams
 import pad.validator.*
 import spark.ModelAndView
 import spark.Request
@@ -56,8 +59,26 @@ class DataController : AbstractController() {
     @Hateoas(rel = "student.books.list", linkFormat = "/students/:studentId/books")
     fun getBooks(req: Request, res: Response): ModelAndView {
         val responseBuilder = ResponseBuilder(req, res)
-        val response = dataService.getBooks(req.params("studentId")).body
-        responseBuilder.response(response)
+        val studentId = req.params("studentId")
+        var q = req.queryParams("q")
+        if (!NameValidator("query").validate(null, q))
+            q = null
+        var offset = req.queryParams("offset")?.toIntOrNull() ?: DEFAULT_OFFSET
+        var limit = req.queryParams("limit")?.toIntOrNull() ?: DEFAULT_LIMIT
+        val response: ServiceResponse<List<BookDto>, Unit>
+        if (!IntValidator(0, Int.MAX_VALUE).validate(null, offset))
+            offset = DEFAULT_OFFSET
+        if (!IntValidator(0, MAX_LIMIT).validate(null, limit))
+            limit = DEFAULT_LIMIT
+        response = if (q == null) {
+            if (req.hasSearchParams())
+                dataService.searchMulticriteriaBooks(studentId,req.searchParams(), offset, limit)
+            else
+                dataService.getBooks(studentId,offset, limit)
+        } else {
+            dataService.searchRelevantBooks(studentId, q, offset, limit)
+        }
+        responseBuilder.response(response.body)
         return responseBuilder.getModel()
     }
 
@@ -80,8 +101,45 @@ class DataController : AbstractController() {
                 .doValidate()
                 .result(toSimple())
         if (result.isSuccess) {
-            val response = dataService.createBook(idStudent.toString(), title, author, year!!, desc)
+            val response = dataService.createBook(idStudent.toString(), title, author, year, desc)
             if (response.body != null) {
+                CacheValidator.invalidate("/students/$idStudent/books")
+                responseBuilder
+                        .response(response.body)
+                        .code(HttpStatus.CREATED_201)
+            } else {
+                responseBuilder
+                        .code(HttpStatus.BAD_REQUEST_400)
+                        .error(response.errorMessage)
+            }
+        } else {
+            responseBuilder
+                    .error(result.errors)
+        }
+        return responseBuilder.getModel()
+    }
+
+    fun putBook(req: Request, res: Response): ModelAndView {
+        val bodyParams = req.bodyParams()
+        val idStudent = req.params("studentId")
+        val title = bodyParams.string("title")
+        val author = bodyParams.string("author")
+        val desc = bodyParams.string("desc")
+        val year = bodyParams.int("year")
+        val responseBuilder = ResponseBuilder(req, res)
+        val result = FluentValidator.checkAll()
+                .setIsFailFast(false)
+                .on(idStudent, UUIDValidator("studentId"))
+                .on(title, NameValidator("Title"))
+                .on(author, NameValidator("Author"))
+                .on(desc, DescValidator())
+                .on(year, IntValidator(1000, 2017))
+                .doValidate()
+                .result(toSimple())
+        if (result.isSuccess) {
+            val response = dataService.createBook(idStudent.toString(), title, author, year, desc)
+            if (response.body != null) {
+                CacheValidator.invalidate("/students/$idStudent/books")
                 responseBuilder
                         .response(response.body)
                         .code(HttpStatus.CREATED_201)
@@ -124,10 +182,13 @@ class DataController : AbstractController() {
             offset = DEFAULT_OFFSET
         if (!IntValidator(0, MAX_LIMIT).validate(null, limit))
             limit = DEFAULT_LIMIT
-        response = if (q == null)
-            dataService.getStudents(offset,limit)
-        else {
-            dataService.searchStudents(q, offset, limit)
+        response = if (q == null) {
+            if (req.hasSearchParams())
+                dataService.searchMulticriteriaStudents(req.searchParams(), offset, limit)
+            else
+                dataService.getStudents(offset, limit)
+        } else {
+            dataService.searchRelevantStudents(q, offset, limit)
         }
         responseBuilder.response(response.body)
         return responseBuilder.getModel()
@@ -155,6 +216,8 @@ class DataController : AbstractController() {
                 .result(toSimple())
         if (check.isSuccess) {
             val result = dataService.deleteStudent(studentId)
+            CacheValidator.invalidate("/students")
+            CacheValidator.invalidate("/students/$studentId")
             if (result.errorMessage != null)
                 responseBuilder
                         .code(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -179,6 +242,8 @@ class DataController : AbstractController() {
                 .on(bookId, UUIDValidator("bookId"))
                 .result(toSimple())
         if (check.isSuccess) {
+            CacheValidator.invalidate("/students/$studentId/books")
+            CacheValidator.invalidate("/students/$studentId/books/$bookId")
             val result = dataService.deleteBook(bookId, studentId)
             if (result.errorMessage != null)
                 responseBuilder
@@ -208,7 +273,8 @@ class DataController : AbstractController() {
                 .doValidate()
                 .result(toSimple())
         if (check.isSuccess) {
-            val result = dataService.createStudent(studentName, studentPhone, studentYear!!)
+            CacheValidator.invalidate("/students")
+            val result = dataService.createStudent(studentName, studentPhone, studentYear)
             responseBuilder
                     .code(HttpStatus.CREATED_201)
                     .response(result.body)
@@ -236,7 +302,9 @@ class DataController : AbstractController() {
                 .result(toSimple())
         Runner.logger.debug("studentId = $studentId")
         if (check.isSuccess) {
-            val result = dataService.putStudent(req.params("studentId"), studentName, studentPhone, studentYear!!)
+            CacheValidator.invalidate("/students/$studentId")
+            CacheValidator.invalidate("/students")
+            val result = dataService.putStudent(req.params("studentId"), studentName, studentPhone, studentYear)
             responseBuilder
                     .code(if (result.param == true) HttpStatus.CREATED_201 else HttpStatus.OK_200)
                     .response(result.body)

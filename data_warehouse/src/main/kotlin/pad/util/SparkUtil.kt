@@ -21,6 +21,21 @@ fun Request.bodyParams(): BodyParams {
     return BodyParams(queryPairs)
 }
 
+fun Request.hasSearchParams(): Boolean {
+    return queryParams().any { it !in listOf("q", "offset", "limit") }
+}
+
+fun Request.searchParams(): Map<String, String> {
+    val map = mutableMapOf<String, String>()
+    for (key in queryParams()) {
+        val params = queryParamsValues(key)
+        if (params != null && params.isNotEmpty())
+            map.put(key, queryParamsValues(key)[0])
+    }
+    Runner.logger.error("MAP = " + map)
+    return map
+}
+
 class BodyParams(private val params: Map<String, String>) {
     fun int(name: String): Int {
         return params[name]?.toIntOrNull() ?: Int.MIN_VALUE

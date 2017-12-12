@@ -42,7 +42,7 @@ class DataService @Inject constructor() {
         }
     }
 
-    fun searchStudents(q: String, offset: Int, limit: Int): ServiceResponse<List<StudentDto>, Unit> {
+    fun searchRelevantStudents(q: String, offset: Int, limit: Int): ServiceResponse<List<StudentDto>, Unit> {
         return try {
             ServiceResponse(studentDao
                     .queryBuilder()
@@ -51,6 +51,40 @@ class DataService @Inject constructor() {
                     .where()
                     .like("name", "%$q%")
                     .query()
+                    .map { StudentDto(it) })
+        } catch (e: SQLException) {
+            ServiceResponse(null, e.message)
+        }
+    }
+
+    fun searchRelevantBooks(studentId: String, q: String, offset: Int, limit: Int): ServiceResponse<List<BookDto>, Unit> {
+        return try {
+            ServiceResponse(bookDao
+                    .queryBuilder()
+                    .limit(limit)
+                    .offset(offset)
+                    .where()
+                    .eq("student_id",studentId)
+                    .like("title", "%$q%")
+                    .query()
+                    .map { BookDto(it) })
+        } catch (e: SQLException) {
+            ServiceResponse(null, e.message)
+        }
+    }
+
+    fun searchMulticriteriaBooks(studentId: String, params: Map<String, String>, offset: Int, limit: Int): ServiceResponse<List<BookDto>, Unit> {
+        return try {
+            ServiceResponse(SearchHandler().query(bookDao, params, offset, limit)
+                    .map { BookDto(it) })
+        } catch (e: SQLException) {
+            ServiceResponse(null, e.message)
+        }
+    }
+
+    fun searchMulticriteriaStudents(params: Map<String, String>, offset: Int, limit: Int): ServiceResponse<List<StudentDto>, Unit> {
+        return try {
+            ServiceResponse(SearchHandler().query(studentDao, params, offset, limit)
                     .map { StudentDto(it) })
         } catch (e: SQLException) {
             ServiceResponse(null, e.message)
@@ -133,9 +167,10 @@ class DataService @Inject constructor() {
         return ServiceResponse(BookDto(book))
     }
 
-    fun getBooks(idStudent: String): ServiceResponse<List<BookDto>, Unit> {
+    fun getBooks(idStudent: String, offset: Int, limit: Int): ServiceResponse<List<BookDto>, Unit> {
         try {
-            return ServiceResponse(studentDao.queryForId(idStudent).books.map { BookDto(it) }.toList())
+            return ServiceResponse(bookDao.queryBuilder().offset(offset).limit(limit)
+                    .where().eq("student_id",idStudent).query().map { BookDto(it) }.toList())
         } catch (e: SQLException) {
             return ServiceResponse(null, e.message)
         }
