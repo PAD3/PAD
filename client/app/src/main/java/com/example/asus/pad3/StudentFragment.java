@@ -102,7 +102,7 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
         View v = inflater.inflate(R.layout.fragment_student, container, false);
         ButterKnife.bind(this, v);
         setHasOptionsMenu(true);
-        loadMore();
+        loadMore(0);
         studentsList.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -113,7 +113,9 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
                 int total = recyclerView.getLayoutManager().getItemCount();
                 int firstVisible = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
                 if (firstVisible + visibleCount == total && total > 0 && total > visibleCount)
-                    loadMore(); //novie nado gruziti po etomu usloviu... a voobshe fragment nado perepisati. tut mojno povesitsya.
+
+                loadMore(studentses.size()-1); //novie nado gruziti po etomu usloviu... a voobshe fragment nado perepisati. tut mojno povesitsya.
+
 
             }
 
@@ -125,7 +127,7 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
         return v;
     }
 
-    private void loadMore() {
+    private void loadMore(int offset) {
         Gson gson = new GsonBuilder()
                 .setLenient()
                 .create();
@@ -148,6 +150,7 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
                 .build();
         categoryAdapter = new StudentAdapter(getActivity(), this, this, this);
         studentsList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        studentsList.setHasFixedSize(true);
         studentsList.setAdapter(categoryAdapter);
         student = retrofit.create(API.class);
         student.getStudents("", offset, DEFAULT_LIMIT).enqueue(new Callback<ReponseStudent>() {
@@ -155,7 +158,7 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
             public void onResponse(Call<ReponseStudent> call, retrofit2.Response<ReponseStudent> response) {
                 if (response.body() != null) {
                     progress.setVisibility(View.GONE);
-                    //studentses.addAll();
+                    studentses.addAll(response.body().getResponse());
                     categoryAdapter.addItems(response.body().getResponse());
                     studentsList.setAdapter(categoryAdapter);
                 }
@@ -322,7 +325,7 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
     public void onChildClickChange(String studentId, final int pos) {
         idChange = studentId;
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(LAYOUT_INFLATER_SERVICE);
-        View customView1 = inflater.inflate(R.layout.add_student, null);
+        View customView1 = inflater.inflate(R.layout.change_user, null);
         LinearLayout mainRev = customView1.findViewById(R.id.mainRev);
         final EditText name = customView1.findViewById(R.id.nameEditText);
         final EditText year = customView1.findViewById(R.id.yearEditText);
@@ -358,12 +361,22 @@ public class StudentFragment extends Fragment implements StudentAdapter.ItemClic
                         .client(okHttpClient)
                         .build();
                 student = retrofit.create(API.class);
-                student.changeStudent(idChange, "Alex4545", "1995", "199556565").enqueue(new Callback<Response>() {
+                student.changeStudent(idChange, name.getText().toString(), year.getText().toString(), phone.getText().toString()).enqueue(new Callback<Response>() {
                     @Override
                     public void onResponse(Call<Response> call, retrofit2.Response<Response> response) {
                         progress.setVisibility(View.GONE);
-                        Toast.makeText(getActivity(), "ok", Toast.LENGTH_SHORT).show();
-                        alert.dismiss();
+                        if(response.body()!=null) {
+                            if (response.body().getResponse() != null) {
+                                Toast.makeText(getActivity(), "ok", Toast.LENGTH_SHORT).show();
+                                studentses.set(pos, new Student(response.body().getResponse().getPhone(), response.body().getResponse().getYear(), response.body().getResponse().getName(),
+                                        response.body().getResponse().getId()));
+                                categoryAdapter.swap(studentses);
+                                alert.dismiss();
+                            }
+                        }
+                        else {
+                            Toast.makeText(getActivity(),"Please input data right",Toast.LENGTH_SHORT).show();
+                        }
                     }
 
                     @Override

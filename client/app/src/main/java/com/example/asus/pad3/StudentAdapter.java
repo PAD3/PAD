@@ -23,6 +23,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
     private ItemClickChildDelete itemClickChildDelete;
     private ItemClickChildChange itemClickChildChange;
     Context context;
+    boolean isCheked = false;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name;
@@ -31,6 +32,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         Button deleteButton;
         CheckBox checkBox;
         Button editButton;
+
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -72,18 +74,21 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         holder.name.setText(contactsList.get(position).getName());
         holder.phone.setText(contactsList.get(position).getPhone());
         holder.year.setText(contactsList.get(position).getYear());
+        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                   isCheked = isChecked;
+                }}
+        });
         holder.editButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if(isChecked) {
-                            itemClickChildChange.onChildClickChange(contactsList.get(position).getId(),position);
-                            notifyItemRangeChanged(position, contactsList.size());
-                            Toast.makeText(context,contactsList.get(position).getId(),Toast.LENGTH_SHORT).show();
-                        }}
-                });
+                if(isCheked) {
+                    itemClickChildChange.onChildClickChange(contactsList.get(position).getId(),position);
+                    notifyItemRangeChanged(position, contactsList.size());
+                    Toast.makeText(context,contactsList.get(position).getId(),Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
