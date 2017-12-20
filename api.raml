@@ -24,6 +24,16 @@ baseUri: http://padproxy.herokuapp.com
         required: false
         type: number
         example: 15
+      name_starts_with:
+        description: "Search for students which name starts with this value"
+        type: string
+        required: false
+        example: "Jo"
+      year_bigger_than:
+        description: "Search for students who were born after this year"
+        required: false
+        type: number
+        example: 1995
     responses:
       406:
         description: Not acceptable
@@ -55,6 +65,20 @@ baseUri: http://padproxy.herokuapp.com
         description: OK
       404:
         description: Student not found
+  put:
+          description: Replace student data for resource id
+          body:
+            application/x-www-form-urlencoded:
+              properties:
+                name:
+                  description: name of the student
+                  type: string
+                year:
+                  type: number
+                  example: 1995
+                phone:
+                  type: number
+                  example: 37369376211
 
   delete:
     description: Delete the student by id and all his books from db
@@ -126,3 +150,19 @@ baseUri: http://padproxy.herokuapp.com
         description: Student not found
       200:
         description: Ok
+  put:
+          body:
+            application/x-www-form-urlencoded:
+              properties:
+                title:
+                  type: string
+                  example: War and Peace
+                author:
+                  type: string
+                  example: Leo Tolstoy
+                desc:
+                  type: string
+                  example: The novel chronicles the history of the French invasion of Russia and the impact of the Napoleonic era on Tsarist society through the stories of five Russian aristocratic families
+                year:
+                  type: number
+                  example: 1869
